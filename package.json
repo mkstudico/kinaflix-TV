@@ -1,7 +1,7 @@
 {
   "name": "kinaflix-tv",
   "version": "1.0.0",
-  "description": "KINAFLIX TV - Self-hosted video streaming + chat system",
+  "description": "KINAFLIX TV Streaming Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,13 +13,7 @@
     "cors": "^2.8.5",
     "multer": "^1.4.5-lts.1"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
   "engines": {
     "node": ">=14.0.0"
-  },
-  "keywords": ["streaming", "video", "chat", "real-time", "kinaflix"],
-  "author": "KINAFLIX",
-  "license": "MIT"
+  }
 }
