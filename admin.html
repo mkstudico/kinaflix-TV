@@ -15,42 +15,112 @@
         }
         
         .admin-sidebar {
-            width: var(--sidebar-width);
+            width: 280px;
             background: var(--dark);
-            padding: 20px;
             border-right: 1px solid #333;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         .admin-main {
             flex: 1;
-            padding: 20px;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
         
         .admin-header {
+            padding: 15px 20px;
+            background: var(--dark);
+            border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #333;
         }
         
         .logo {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: var(--primary);
+        }
+        
+        .sidebar-tabs {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 5px;
+        }
+        
+        .tab-btn {
+            padding: 12px 15px;
+            border: none;
+            background: transparent;
+            color: var(--gray);
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .video-player-wrapper {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: auto;
+            max-height: 60vh;
+            display: block;
+        }
+        
+        .admin-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 0 20px;
         }
         
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .stat-card {
@@ -72,19 +142,78 @@
             font-size: 14px;
         }
         
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
+        .user-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .user-list-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background: var(--dark-gray);
+            color: var(--gray);
+            font-weight: 500;
+            border-bottom: 1px solid #333;
+        }
+        
+        .user-list-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .user-list-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .playlist-item.dragging {
+            opacity: 0.5;
+            background: rgba(229, 9, 20, 0.1);
+        }
+        
+        .stream-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .status-online {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+        
+        .status-offline {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+        
+        .status-paused {
+            background: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .connection-status.connected {
+            background: #1b5e20;
+        }
+        
+        .connection-status.disconnected {
+            background: #b71c1c;
         }
         
         @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (max-width: 768px) {
             .admin-container {
                 flex-direction: column;
             }
@@ -95,187 +224,335 @@
                 border-bottom: 1px solid #333;
             }
             
+            .sidebar-tabs {
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+            }
+            
+            .tab-btn {
+                white-space: nowrap;
+            }
+            
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
         
-        @media (max-width: 576px) {
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .user-list-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .admin-controls {
+                flex-wrap: wrap;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .tab-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            .tab-content {
+                padding: 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="admin-container">
-        <!-- Sidebar -->
+        <!-- Sidebar with Tabs -->
         <div class="admin-sidebar">
-            <div class="logo">
-                <i class="fas fa-tv"></i>
-                <span>KINAFLIX TV</span>
-            </div>
-            
-            <div class="card" style="margin-top: 20px;">
-                <h3 style="margin-bottom: 15px;"><i class="fas fa-crown"></i> Admin Controls</h3>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button class="btn btn-primary" id="playBtn">
-                        <i class="fas fa-play"></i> Play
-                    </button>
-                    <button class="btn btn-secondary" id="pauseBtn">
-                        <i class="fas fa-pause"></i> Pause
-                    </button>
-                    <button class="btn btn-secondary" id="nextBtn">
-                        <i class="fas fa-forward"></i> Next
-                    </button>
-                    <button class="btn btn-secondary" id="prevBtn">
-                        <i class="fas fa-backward"></i> Previous
-                    </button>
-                    <div class="form-group">
-                        <label>Seek to (seconds):</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="number" id="seekTime" class="form-control" placeholder="0" min="0">
-                            <button class="btn btn-small btn-primary" id="seekBtn">Seek</button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Subtitles:</label>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <button class="btn btn-small" id="toggleSubsBtn">
-                                <i class="fas fa-closed-captioning"></i> OFF
-                            </button>
-                            <input type="file" id="subtitleUpload" accept=".vtt" style="display: none;">
-                            <button class="btn btn-small btn-secondary" id="uploadSubsBtn">
-                                <i class="fas fa-upload"></i> Upload .vtt
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card" style="margin-top: 20px;">
-                <h3 style="margin-bottom: 15px;"><i class="fas fa-upload"></i> Upload Video</h3>
-                <div id="uploadArea" style="border: 2px dashed #444; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer;">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: var(--gray); margin-bottom: 10px;"></i>
-                    <p>Click or drag video files here</p>
-                    <p style="font-size: 12px; color: var(--gray); margin-top: 5px;">MP4, WebM, MOV supported</p>
-                </div>
-                <input type="file" id="videoUpload" accept="video/*" multiple style="display: none;">
-                <div id="uploadProgress" style="margin-top: 15px; display: none;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>Uploading...</span>
-                        <span id="uploadPercent">0%</span>
-                    </div>
-                    <div style="height: 4px; background: #333; border-radius: 2px;">
-                        <div id="uploadBar" style="height: 100%; width: 0%; background: var(--primary); border-radius: 2px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="admin-main">
             <div class="admin-header">
-                <div>
-                    <h1>Admin Dashboard</h1>
-                    <p style="color: var(--gray);">Control video playback and manage viewers</p>
+                <div class="logo">
+                    <i class="fas fa-tv"></i>
+                    <span>KINAFLIX TV</span>
                 </div>
-                <div id="connectionStatus" class="btn btn-small" style="background: #333;">
+                <div class="connection-status" id="connectionStatus">
                     <i class="fas fa-circle" style="color: #ccc;"></i>
                     <span>Connecting...</span>
                 </div>
             </div>
             
-            <!-- Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <i class="fas fa-users" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="viewerCount">0</div>
-                    <div class="stat-label">Active Viewers</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-film" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="videoCount">0</div>
-                    <div class="stat-label">Videos in Playlist</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-broadcast-tower" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="status">LIVE</div>
-                    <div class="stat-label">Stream Status</div>
-                </div>
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="tab-btn" data-tab="participants">
+                    <i class="fas fa-users"></i>
+                    <span>Participants</span>
+                </button>
+                <button class="tab-btn" data-tab="stream">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Stream Status</span>
+                </button>
+                <button class="tab-btn" data-tab="playlist">
+                    <i class="fas fa-list"></i>
+                    <span>Playlist</span>
+                </button>
+                <button class="tab-btn" data-tab="upload">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload</span>
+                </button>
+                <button class="tab-btn" data-tab="chat">
+                    <i class="fas fa-comments"></i>
+                    <span>Live Chat</span>
+                </button>
             </div>
-            
-            <!-- Main Grid -->
-            <div class="dashboard-grid">
-                <!-- Left Column: Video + Playlist -->
-                <div>
-                    <div class="card">
-                        <h3 style="margin-bottom: 15px;">
-                            <i class="fas fa-play-circle"></i> Now Playing
-                        </h3>
-                        <div class="video-container">
-                            <video id="videoPlayer" class="video-player" controls>
-                                Your browser does not support the video tag.
-                            </video>
-                            <div class="video-controls">
-                                <button class="btn btn-small btn-primary" id="adminPlayBtn">
-                                    <i class="fas fa-play"></i> Play
-                                </button>
-                                <button class="btn btn-small btn-secondary" id="adminPauseBtn">
-                                    <i class="fas fa-pause"></i> Pause
-                                </button>
-                                <button class="btn btn-small btn-secondary" id="adminNextBtn">
-                                    <i class="fas fa-forward"></i> Next
-                                </button>
-                            </div>
-                        </div>
-                        <div style="margin-top: 15px;">
-                            <h4 id="currentVideoTitle">No video selected</h4>
-                            <p id="currentVideoInfo" style="color: var(--gray); font-size: 14px;">Upload videos to get started</p>
-                        </div>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="admin-main">
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard-tab">
+                <h2 style="margin-bottom: 20px;">Dashboard Overview</h2>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-users" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="viewerCount">0</div>
+                        <div class="stat-label">Active Viewers</div>
                     </div>
-                    
-                    <div class="card" style="margin-top: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3><i class="fas fa-list"></i> Playlist</h3>
-                            <button class="btn btn-small btn-danger" id="clearPlaylistBtn">
-                                <i class="fas fa-trash"></i> Clear All
+                    <div class="stat-card">
+                        <i class="fas fa-film" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="videoCount">0</div>
+                        <div class="stat-label">Videos in Playlist</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="streamTime">0m</div>
+                        <div class="stat-label">Stream Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-signal" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="streamStatusText">OFF</div>
+                        <div class="stat-label">Stream Status</div>
+                    </div>
+                </div>
+                
+                <!-- Video Player -->
+                <div class="video-player-wrapper">
+                    <video id="videoPlayer" class="video-player" controlsList="nodownload" playsinline>
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="admin-controls">
+                        <button class="btn btn-primary" id="playBtn">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                        <button class="btn btn-secondary" id="pauseBtn">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button class="btn btn-secondary" id="prevBtn">
+                            <i class="fas fa-backward"></i> Prev
+                        </button>
+                        <button class="btn btn-secondary" id="nextBtn">
+                            <i class="fas fa-forward"></i> Next
+                        </button>
+                        <button class="btn btn-secondary" id="subtitleToggle">
+                            <i class="fas fa-closed-captioning"></i> Subs
+                        </button>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="number" id="seekTime" class="form-control" 
+                                   placeholder="Time" min="0" style="width: 80px; padding: 8px;">
+                            <button class="btn btn-small btn-primary" id="seekBtn">
+                                <i class="fas fa-redo"></i>
                             </button>
-                        </div>
-                        <div class="playlist-container" id="playlist">
-                            <div class="loading">
-                                <div class="loading-spinner"></div>
-                                <p>Loading playlist...</p>
-                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Right Column: Chat + Users -->
-                <div>
-                    <div class="card" style="height: 400px;">
-                        <h3 style="margin-bottom: 15px;">
-                            <i class="fas fa-comments"></i> Chat
-                        </h3>
-                        <div class="chat-container">
-                            <div class="chat-messages" id="chatMessages">
-                                <!-- Messages will appear here -->
-                            </div>
-                            <div class="chat-input-container">
-                                <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
-                                <button class="btn btn-primary" id="sendBtn">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
+                <!-- Current Video Info -->
+                <div class="card">
+                    <h3 style="margin-bottom: 10px;">Now Playing</h3>
+                    <div id="currentVideoInfo">
+                        <p style="color: var(--gray);">No video selected</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Participants Tab -->
+            <div class="tab-content" id="participants-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Participants</h2>
+                    <button class="btn btn-small btn-primary" id="refreshUsersBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="user-list-table-container">
+                        <table class="user-list-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Watch Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userListBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--gray);">
+                                        <i class="fas fa-users" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                        <p>No viewers connected</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stream Status Tab -->
+            <div class="tab-content" id="stream-tab">
+                <h2 style="margin-bottom: 20px;">Stream Status</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-server" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="serverUptime">0m</div>
+                        <div class="stat-label">Server Uptime</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-microchip" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="connectionLatency">0ms</div>
+                        <div class="stat-label">Avg Latency</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-database" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="totalVideos">0</div>
+                        <div class="stat-label">Total Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="totalChats">0</div>
+                        <div class="stat-label">Chat Messages</div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px;">Stream Information</h3>
+                    <div id="streamInfo">
+                        <p style="margin-bottom: 10px;"><strong>Stream URL:</strong> <span id="streamUrl">Loading...</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Current Viewers:</strong> <span id="currentViewers">0</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Stream Started:</strong> <span id="streamStartTime">Not started</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Current Video:</strong> <span id="currentVideoStatus">None</span></p>
+                        <p><strong>Subtitles:</strong> <span id="subtitleStatus">Disabled</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Playlist Tab -->
+            <div class="tab-content" id="playlist-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Playlist Management</h2>
+                    <button class="btn btn-danger" id="clearPlaylistBtn">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div id="playlistContainer">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading playlist...</p>
                         </div>
                     </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px;">Playlist Controls</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" id="shufflePlaylistBtn">
+                            <i class="fas fa-random"></i> Shuffle
+                        </button>
+                        <button class="btn btn-secondary" id="sortByNameBtn">
+                            <i class="fas fa-sort-alpha-down"></i> Sort by Name
+                        </button>
+                        <button class="btn btn-secondary" id="sortByDateBtn">
+                            <i class="fas fa-sort-numeric-down"></i> Sort by Date
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Tab -->
+            <div class="tab-content" id="upload-tab">
+                <h2 style="margin-bottom: 20px;">Upload Content</h2>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 15px;">
+                        <i class="fas fa-video"></i> Upload Videos
+                    </h3>
+                    <div id="uploadArea" style="border: 3px dashed #444; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 64px; color: var(--gray); margin-bottom: 15px;"></i>
+                        <h4>Drop video files here or click to upload</h4>
+                        <p style="color: var(--gray); margin-top: 10px; font-size: 14px;">
+                            Supports MP4, WebM, MOV files (Max 500MB each)
+                        </p>
+                    </div>
+                    <input type="file" id="videoUpload" accept="video/*" multiple style="display: none;">
                     
-                    <div class="card" style="margin-top: 20px;">
-                        <h3 style="margin-bottom: 15px;">
-                            <i class="fas fa-users"></i> Connected Viewers
-                        </h3>
-                        <div class="user-list" id="userList">
-                            <!-- Users will appear here -->
+                    <div id="uploadProgress" style="margin-top: 20px; display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Uploading...</span>
+                            <span id="uploadPercent">0%</span>
+                        </div>
+                        <div style="height: 6px; background: #333; border-radius: 3px; overflow: hidden;">
+                            <div id="uploadBar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px;">
+                        <i class="fas fa-closed-captioning"></i> Upload Subtitles
+                    </h3>
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <input type="file" id="subtitleUpload" accept=".vtt" style="display: none;">
+                            <button class="btn btn-secondary" id="selectSubtitleBtn" style="width: 100%;">
+                                <i class="fas fa-file-alt"></i> Select .vtt File
+                            </button>
+                        </div>
+                        <div style="flex: 2;">
+                            <p style="color: var(--gray); font-size: 14px; margin: 0;">
+                                Upload WebVTT (.vtt) subtitle files. Subtitles will be available for all videos in the stream.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Tab -->
+            <div class="tab-content" id="chat-tab">
+                <h2 style="margin-bottom: 20px;">Live Chat</h2>
+                
+                <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 600px;">
+                    <div class="chat-container" style="flex: 1; min-height: 0;">
+                        <div class="chat-messages" id="chatMessages" style="flex: 1; min-height: 0;">
+                            <!-- Messages will appear here -->
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
+                            <button class="btn btn-primary" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -286,20 +563,24 @@
     <!-- Toast Container -->
     <div id="toastContainer"></div>
     
+    <!-- Include Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
     <script>
-        // Admin JavaScript
+        // Admin JavaScript - Fixed syntax errors
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
             const videoPlayer = document.getElementById('videoPlayer');
-            const playlistEl = document.getElementById('playlist');
             const chatMessages = document.getElementById('chatMessages');
             const chatInput = document.getElementById('chatInput');
             const sendBtn = document.getElementById('sendBtn');
-            const userList = document.getElementById('userList');
+            const connectionStatus = document.getElementById('connectionStatus');
             const viewerCountEl = document.getElementById('viewerCount');
             const videoCountEl = document.getElementById('videoCount');
-            const connectionStatus = document.getElementById('connectionStatus');
-            const currentVideoTitle = document.getElementById('currentVideoTitle');
+            const streamTimeEl = document.getElementById('streamTime');
+            const streamStatusTextEl = document.getElementById('streamStatusText');
+            const userListBody = document.getElementById('userListBody');
+            const playlistContainer = document.getElementById('playlistContainer');
             const currentVideoInfo = document.getElementById('currentVideoInfo');
             
             // Control Buttons
@@ -309,26 +590,30 @@
             const prevBtn = document.getElementById('prevBtn');
             const seekBtn = document.getElementById('seekBtn');
             const seekTime = document.getElementById('seekTime');
-            const toggleSubsBtn = document.getElementById('toggleSubsBtn');
-            const uploadSubsBtn = document.getElementById('uploadSubsBtn');
-            const subtitleUpload = document.getElementById('subtitleUpload');
+            const subtitleToggle = document.getElementById('subtitleToggle');
             const clearPlaylistBtn = document.getElementById('clearPlaylistBtn');
             const videoUpload = document.getElementById('videoUpload');
             const uploadArea = document.getElementById('uploadArea');
             const uploadProgress = document.getElementById('uploadProgress');
             const uploadBar = document.getElementById('uploadBar');
             const uploadPercent = document.getElementById('uploadPercent');
-            const adminPlayBtn = document.getElementById('adminPlayBtn');
-            const adminPauseBtn = document.getElementById('adminPauseBtn');
-            const adminNextBtn = document.getElementById('adminNextBtn');
+            const selectSubtitleBtn = document.getElementById('selectSubtitleBtn');
+            const subtitleUpload = document.getElementById('subtitleUpload');
+            const refreshUsersBtn = document.getElementById('refreshUsersBtn');
             
-            // State
+            // Tab Elements
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            // State Variables
             let socket = null;
             let roomState = null;
             let connectedUsers = [];
             let playlist = [];
             let isAdmin = false;
             let subtitlesEnabled = false;
+            let serverStartTime = Date.now();
+            let pingTimes = [];
             
             // Initialize
             init();
@@ -336,17 +621,37 @@
             function init() {
                 connectSocket();
                 setupEventListeners();
+                setupTabs();
+                startStatusUpdates();
             }
             
             function connectSocket() {
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const socketUrl = `${protocol}//${window.location.host}`;
                 
-                socket = io(socketUrl);
+                socket = io(socketUrl, {
+                    transports: ['websocket', 'polling'],
+                    upgrade: true,
+                    rememberUpgrade: true,
+                    timeout: 10000,
+                    reconnection: true,
+                    reconnectionAttempts: 5,
+                    reconnectionDelay: 1000
+                });
                 
                 socket.on('connect', () => {
                     console.log('Connected to server');
                     updateConnectionStatus(true);
+                    
+                    // Send ping to measure latency
+                    const pingTime = Date.now();
+                    socket.emit('ping');
+                    socket.once('pong', () => {
+                        const latency = Date.now() - pingTime;
+                        pingTimes.push(latency);
+                        if (pingTimes.length > 10) pingTimes.shift();
+                    });
+                    
                     socket.emit('identify', { name: 'Admin', type: 'admin' });
                 });
                 
@@ -354,12 +659,15 @@
                     isAdmin = data.isAdmin;
                     if (isAdmin) {
                         showToast('Admin privileges granted', 'success');
+                        // Request initial data
+                        socket.emit('requestUserList');
                     }
                 });
                 
                 socket.on('roomState', (state) => {
                     roomState = state;
                     updateUI();
+                    updateStreamStatus();
                 });
                 
                 socket.on('playlistUpdate', (updatedPlaylist) => {
@@ -374,12 +682,20 @@
                     }
                 });
                 
-                socket.on('playVideo', () => {
-                    videoPlayer.play().catch(e => console.log('Auto-play prevented:', e));
+                socket.on('playVideo', (data) => {
+                    if (data && data.currentTime !== undefined) {
+                        videoPlayer.currentTime = data.currentTime;
+                    }
+                    videoPlayer.play().catch(e => {
+                        console.log('Auto-play prevented:', e);
+                        showToast('Click video to start playback', 'info');
+                    });
+                    updateStreamStatus();
                 });
                 
                 socket.on('pauseVideo', () => {
                     videoPlayer.pause();
+                    updateStreamStatus();
                 });
                 
                 socket.on('seekVideo', (time) => {
@@ -392,22 +708,29 @@
                 
                 socket.on('userJoin', (data) => {
                     showToast(`${data.name} joined the stream`, 'success');
-                    updateViewerCount();
+                    updateViewerCount(data.viewerCount);
+                    socket.emit('requestUserList');
                 });
                 
                 socket.on('userLeave', (data) => {
                     showToast(`${data.name} left the stream`, 'warning');
-                    updateViewerCount();
+                    updateViewerCount(data.viewerCount);
+                    socket.emit('requestUserList');
+                });
+                
+                socket.on('userListUpdate', (users) => {
+                    connectedUsers = users;
+                    renderUserList(users);
                 });
                 
                 socket.on('subtitlesToggle', (enabled) => {
                     subtitlesEnabled = enabled;
-                    updateSubtitlesToggle();
+                    updateSubtitleToggle();
                     updateVideoSubtitles();
                 });
                 
                 socket.on('subtitleUpdate', (subtitleFile) => {
-                    roomState.subtitleFile = subtitleFile;
+                    if (roomState) roomState.subtitleFile = subtitleFile;
                     updateVideoSubtitles();
                 });
                 
@@ -435,32 +758,30 @@
                     }
                 });
                 
-                // Admin video controls
-                adminPlayBtn.addEventListener('click', () => socket.emit('playVideo'));
-                adminPauseBtn.addEventListener('click', () => socket.emit('pauseVideo'));
-                adminNextBtn.addEventListener('click', () => socket.emit('nextVideo'));
-                
                 // Subtitles
-                toggleSubsBtn.addEventListener('click', () => {
+                subtitleToggle.addEventListener('click', () => {
                     subtitlesEnabled = !subtitlesEnabled;
                     socket.emit('toggleSubtitles', subtitlesEnabled);
                 });
                 
-                uploadSubsBtn.addEventListener('click', () => subtitleUpload.click());
+                selectSubtitleBtn.addEventListener('click', () => subtitleUpload.click());
                 subtitleUpload.addEventListener('change', uploadSubtitle);
                 
                 // Video Upload
                 uploadArea.addEventListener('click', () => videoUpload.click());
                 uploadArea.addEventListener('dragover', (e) => {
                     e.preventDefault();
-                    uploadArea.style.borderColor = var('--primary');
+                    uploadArea.style.borderColor = '#e50914';
+                    uploadArea.style.background = 'rgba(229, 9, 20, 0.05)';
                 });
                 uploadArea.addEventListener('dragleave', () => {
                     uploadArea.style.borderColor = '#444';
+                    uploadArea.style.background = 'transparent';
                 });
                 uploadArea.addEventListener('drop', (e) => {
                     e.preventDefault();
                     uploadArea.style.borderColor = '#444';
+                    uploadArea.style.background = 'transparent';
                     const files = e.dataTransfer.files;
                     handleVideoUpload(files);
                 });
@@ -474,6 +795,11 @@
                                 .catch(console.error);
                         });
                     }
+                });
+                
+                // Refresh Users
+                refreshUsersBtn.addEventListener('click', () => {
+                    if (socket) socket.emit('requestUserList');
                 });
                 
                 // Chat
@@ -499,6 +825,26 @@
                 });
             }
             
+            function setupTabs() {
+                tabBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const tabId = btn.dataset.tab;
+                        
+                        // Update active tab button
+                        tabBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        // Show corresponding content
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            if (content.id === `${tabId}-tab`) {
+                                content.classList.add('active');
+                            }
+                        });
+                    });
+                });
+            }
+            
             function handleVideoUpload(files) {
                 if (!files.length) return;
                 
@@ -511,22 +857,37 @@
                 
                 if (formData.has('video')) {
                     uploadProgress.style.display = 'block';
+                    uploadBar.style.width = '0%';
+                    uploadPercent.textContent = '0%';
                     
-                    fetch('/api/upload/video', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        showToast('Video uploaded successfully!', 'success');
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/api/upload/video');
+                    
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percentComplete = (e.loaded / e.total) * 100;
+                            uploadBar.style.width = percentComplete + '%';
+                            uploadPercent.textContent = Math.round(percentComplete) + '%';
+                        }
+                    };
+                    
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            showToast('Video uploaded successfully!', 'success');
+                        } else {
+                            showToast('Upload failed: ' + xhr.statusText, 'error');
+                        }
                         uploadProgress.style.display = 'none';
                         uploadBar.style.width = '0%';
                         uploadPercent.textContent = '0%';
-                    })
-                    .catch(error => {
-                        showToast('Upload failed: ' + error.message, 'error');
+                    };
+                    
+                    xhr.onerror = () => {
+                        showToast('Upload failed', 'error');
                         uploadProgress.style.display = 'none';
-                    });
+                    };
+                    
+                    xhr.send(formData);
                 } else {
                     showToast('No valid video files selected', 'error');
                 }
@@ -549,6 +910,7 @@
                 .then(response => response.json())
                 .then(data => {
                     showToast('Subtitles uploaded successfully!', 'success');
+                    subtitleUpload.value = '';
                 })
                 .catch(error => {
                     showToast('Upload failed: ' + error.message, 'error');
@@ -556,27 +918,26 @@
             }
             
             function loadVideo(video) {
-                videoPlayer.src = video.path;
-                currentVideoTitle.textContent = video.originalName;
-                currentVideoInfo.textContent = `Size: ${formatFileSize(video.size)} | Uploaded: ${new Date(video.uploadedAt).toLocaleDateString()}`;
+                if (videoPlayer.src !== video.path) {
+                    videoPlayer.src = video.path;
+                    currentVideoInfo.innerHTML = `
+                        <h4 style="margin-bottom: 5px;">${video.originalName}</h4>
+                        <p style="color: var(--gray); font-size: 14px;">
+                            Size: ${formatFileSize(video.size)} | 
+                            Uploaded: ${new Date(video.uploadedAt).toLocaleDateString()}
+                        </p>
+                    `;
+                }
                 
-                // Update subtitles if available
                 updateVideoSubtitles();
-                
-                // Mark active video in playlist
-                document.querySelectorAll('.playlist-item').forEach(item => {
-                    item.classList.remove('active');
-                    if (item.dataset.videoId === video.id) {
-                        item.classList.add('active');
-                    }
-                });
             }
             
             function updateVideoSubtitles() {
-                const track = videoPlayer.querySelector('track');
-                if (track) track.remove();
+                // Remove existing tracks
+                const tracks = videoPlayer.querySelectorAll('track');
+                tracks.forEach(track => track.remove());
                 
-                if (subtitlesEnabled && roomState.subtitleFile) {
+                if (subtitlesEnabled && roomState && roomState.subtitleFile) {
                     const newTrack = document.createElement('track');
                     newTrack.kind = 'subtitles';
                     newTrack.label = 'English';
@@ -589,20 +950,29 @@
             
             function renderPlaylist() {
                 if (playlist.length === 0) {
-                    playlistEl.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--gray);"><i class="fas fa-film" style="font-size: 48px; margin-bottom: 15px;"></i><p>No videos in playlist</p><p style="font-size: 12px;">Upload videos using the sidebar</p></div>';
+                    playlistContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--gray);">
+                            <i class="fas fa-film" style="font-size: 48px; margin-bottom: 15px;"></i>
+                            <p>No videos in playlist</p>
+                            <p style="font-size: 12px;">Upload videos using the Upload tab</p>
+                        </div>
+                    `;
                     return;
                 }
                 
-                playlistEl.innerHTML = playlist.map(video => `
+                playlistContainer.innerHTML = playlist.map((video, index) => `
                     <div class="playlist-item ${roomState.currentVideo?.id === video.id ? 'active' : ''}" 
-                         data-video-id="${video.id}">
+                         data-video-id="${video.id}" draggable="true">
                         <div class="playlist-info">
                             <div class="playlist-thumbnail">
                                 <i class="fas fa-play"></i>
                             </div>
                             <div class="playlist-details">
                                 <div class="playlist-title">${video.originalName}</div>
-                                <div class="playlist-meta">${formatFileSize(video.size)}</div>
+                                <div class="playlist-meta">
+                                    ${formatFileSize(video.size)} | 
+                                    ${index + 1}/${playlist.length}
+                                </div>
                             </div>
                         </div>
                         <div class="playlist-actions">
@@ -620,8 +990,8 @@
                     </div>
                 `).join('');
                 
-                // Add event listeners to playlist buttons
-                playlistEl.querySelectorAll('.play-video-btn').forEach(btn => {
+                // Add event listeners
+                playlistContainer.querySelectorAll('.play-video-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const videoId = btn.dataset.videoId;
@@ -629,24 +999,74 @@
                     });
                 });
                 
-                playlistEl.querySelectorAll('.remove-video-btn').forEach(btn => {
+                playlistContainer.querySelectorAll('.remove-video-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
                         const videoId = btn.dataset.videoId;
-                        fetch(`/api/video/${videoId}`, { method: 'DELETE' })
-                            .then(() => showToast('Video removed', 'success'))
-                            .catch(error => showToast('Failed to remove video', 'error'));
-                    });
-                });
-                
-                playlistEl.querySelectorAll('.playlist-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        if (!e.target.closest('.playlist-actions')) {
-                            const videoId = item.dataset.videoId;
-                            socket.emit('selectVideo', videoId);
+                        if (confirm('Remove this video from playlist?')) {
+                            fetch(`/api/video/${videoId}`, { method: 'DELETE' })
+                                .then(() => showToast('Video removed', 'success'))
+                                .catch(error => showToast('Failed to remove video', 'error'));
                         }
                     });
                 });
+                
+                // Add drag and drop for reordering
+                setupDragAndDrop();
+            }
+            
+            function setupDragAndDrop() {
+                const items = playlistContainer.querySelectorAll('.playlist-item');
+                let draggedItem = null;
+                
+                items.forEach(item => {
+                    item.addEventListener('dragstart', () => {
+                        draggedItem = item;
+                        setTimeout(() => item.classList.add('dragging'), 0);
+                    });
+                    
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                        draggedItem = null;
+                        
+                        // Get new order and send to server
+                        const newOrder = Array.from(playlistContainer.querySelectorAll('.playlist-item'))
+                            .map(el => el.dataset.videoId)
+                            .map(id => playlist.find(v => v.id === id))
+                            .filter(Boolean);
+                        
+                        fetch('/api/playlist/reorder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ playlist: newOrder })
+                        }).catch(console.error);
+                    });
+                    
+                    item.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        const afterElement = getDragAfterElement(playlistContainer, e.clientY);
+                        if (afterElement == null) {
+                            playlistContainer.appendChild(draggedItem);
+                        } else {
+                            playlistContainer.insertBefore(draggedItem, afterElement);
+                        }
+                    });
+                });
+                
+                function getDragAfterElement(container, y) {
+                    const draggableElements = [...container.querySelectorAll('.playlist-item:not(.dragging)')];
+                    
+                    return draggableElements.reduce((closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+                        
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
+                        } else {
+                            return closest;
+                        }
+                    }, { offset: Number.NEGATIVE_INFINITY }).element;
+                }
             }
             
             function addChatMessage(message) {
@@ -672,40 +1092,52 @@
                 chatInput.value = '';
             }
             
-            function updateViewerCount() {
-                fetch('/api/users')
-                    .then(response => response.json())
-                    .then(users => {
-                        connectedUsers = users;
-                        const viewers = users.filter(u => u.type === 'viewer').length;
-                        viewerCountEl.textContent = viewers;
-                        renderUserList(users);
-                    })
-                    .catch(console.error);
-            }
-            
             function renderUserList(users) {
-                userList.innerHTML = users.map(user => `
-                    <div class="user-item">
-                        <div class="user-info">
-                            <div class="user-avatar">
-                                ${user.name.charAt(0).toUpperCase()}
+                if (users.length === 0) {
+                    userListBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 40px; color: var(--gray);">
+                                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                <p>No viewers connected</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                userListBody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="user-avatar">
+                                    ${user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="user-name">${user.name}</div>
+                                    <div class="user-type ${user.type}">${user.type}</div>
+                                </div>
                             </div>
-                            <div>
-                                <div class="user-name">${user.name}</div>
-                                <div class="user-type ${user.type}">${user.type}</div>
-                            </div>
-                        </div>
-                        ${user.type === 'viewer' ? `
-                            <button class="btn btn-small btn-danger kick-user-btn" data-user-id="${user.id}" title="Kick user">
-                                <i class="fas fa-user-slash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
+                        </td>
+                        <td>${formatTime(user.watchTime || 0)}</td>
+                        <td>
+                            <span class="stream-status-indicator status-online">
+                                <i class="fas fa-circle"></i> Online
+                            </span>
+                        </td>
+                        <td>
+                            ${user.type === 'viewer' ? `
+                                <button class="btn btn-small btn-danger kick-user-btn" 
+                                        data-user-id="${user.id}" 
+                                        title="Kick user">
+                                    <i class="fas fa-user-slash"></i> Kick
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
                 `).join('');
                 
                 // Add kick button listeners
-                userList.querySelectorAll('.kick-user-btn').forEach(btn => {
+                userListBody.querySelectorAll('.kick-user-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const userId = btn.dataset.userId;
                         if (confirm('Kick this viewer?')) {
@@ -720,14 +1152,11 @@
                     // Load current video
                     if (roomState.currentVideo) {
                         loadVideo(roomState.currentVideo);
-                        if (roomState.isPlaying) {
-                            videoPlayer.play().catch(e => console.log('Auto-play prevented:', e));
-                        }
                     }
                     
                     // Update subtitles
                     subtitlesEnabled = roomState.subtitleEnabled || false;
-                    updateSubtitlesToggle();
+                    updateSubtitleToggle();
                     updateVideoSubtitles();
                     
                     // Load chat history
@@ -740,13 +1169,32 @@
                 }
             }
             
-            function updateSubtitlesToggle() {
-                toggleSubsBtn.innerHTML = `
+            function updateViewerCount() {
+                const viewers = connectedUsers.filter(u => u.type === 'viewer').length;
+                viewerCountEl.textContent = viewers;
+            }
+            
+            function updateStreamStatus() {
+                if (roomState && roomState.isPlaying) {
+                    streamStatusTextEl.textContent = 'LIVE';
+                    streamStatusTextEl.style.color = '#4CAF50';
+                } else if (roomState && roomState.currentVideo) {
+                    streamStatusTextEl.textContent = 'PAUSED';
+                    streamStatusTextEl.style.color = '#ff9800';
+                } else {
+                    streamStatusTextEl.textContent = 'OFF';
+                    streamStatusTextEl.style.color = '#f44336';
+                }
+            }
+            
+            function updateSubtitleToggle() {
+                const icon = subtitleToggle.querySelector('i');
+                subtitleToggle.classList.toggle('btn-success', subtitlesEnabled);
+                subtitleToggle.classList.toggle('btn-secondary', !subtitlesEnabled);
+                subtitleToggle.innerHTML = `
                     <i class="fas fa-closed-captioning"></i> 
                     ${subtitlesEnabled ? 'ON' : 'OFF'}
                 `;
-                toggleSubsBtn.classList.toggle('btn-success', subtitlesEnabled);
-                toggleSubsBtn.classList.toggle('btn-secondary', !subtitlesEnabled);
             }
             
             function updateConnectionStatus(connected) {
@@ -756,12 +1204,42 @@
                 if (connected) {
                     icon.style.color = '#4CAF50';
                     text.textContent = 'Connected';
-                    connectionStatus.style.background = '#1b5e20';
+                    connectionStatus.classList.add('connected');
+                    connectionStatus.classList.remove('disconnected');
                 } else {
                     icon.style.color = '#f44336';
                     text.textContent = 'Disconnected';
-                    connectionStatus.style.background = '#b71c1c';
+                    connectionStatus.classList.add('disconnected');
+                    connectionStatus.classList.remove('connected');
                 }
+            }
+            
+            function startStatusUpdates() {
+                setInterval(() => {
+                    // Update stream time
+                    if (roomState && roomState.streamStartTime) {
+                        const streamTime = Date.now() - new Date(roomState.streamStartTime).getTime();
+                        streamTimeEl.textContent = formatTime(streamTime);
+                    }
+                    
+                    // Update server uptime
+                    const uptime = Date.now() - serverStartTime;
+                    document.getElementById('serverUptime').textContent = formatTime(uptime);
+                    
+                    // Update latency
+                    if (pingTimes.length > 0) {
+                        const avgLatency = pingTimes.reduce((a, b) => a + b, 0) / pingTimes.length;
+                        document.getElementById('connectionLatency').textContent = Math.round(avgLatency) + 'ms';
+                    }
+                    
+                    // Update total videos
+                    document.getElementById('totalVideos').textContent = playlist.length;
+                    
+                    // Update total chats
+                    if (roomState && roomState.chatHistory) {
+                        document.getElementById('totalChats').textContent = roomState.chatHistory.length;
+                    }
+                }, 1000);
             }
             
             function showToast(message, type = 'info') {
@@ -779,11 +1257,25 @@
             }
             
             function formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
+                if (!bytes) return '0 Bytes';
                 const k = 1024;
                 const sizes = ['Bytes', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+            
+            function formatTime(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                
+                if (hours > 0) {
+                    return `${hours}h ${minutes % 60}m`;
+                } else if (minutes > 0) {
+                    return `${minutes}m`;
+                } else {
+                    return `${seconds}s`;
+                }
             }
             
             function escapeHtml(text) {
