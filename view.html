@@ -418,4 +418,998 @@
             border: 1px solid #333;
         }
         
-       
+        .user-modal h2 {
+            margin-bottom: 20px;
+            color: #e50914;
+        }
+        
+        .name-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #1f1f1f;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+        }
+        
+        .name-input:focus {
+            border-color: #e50914;
+        }
+        
+        .join-btn {
+            width: 100%;
+            padding: 15px;
+            background: #e50914;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        
+        .join-btn:hover {
+            background: #b2070f;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 12px 20px;
+            background: #1f1f1f;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid #e50914;
+            max-width: 90vw;
+            text-align: center;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-left-color: #4CAF50;
+        }
+        
+        .toast.error {
+            border-left-color: #f44336;
+        }
+        
+        .toast.warning {
+            border-left-color: #ff9800;
+        }
+        
+        .stream-info {
+            padding: 10px 15px;
+            background: #1f1f1f;
+            border-bottom: 1px solid #333;
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stream-title {
+            font-weight: 600;
+            color: white;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 70%;
+        }
+        
+        .stream-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-dot.live {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .header {
+                padding: 8px 12px;
+            }
+            
+            .logo {
+                font-size: 14px;
+            }
+            
+            .connection-status {
+                font-size: 11px;
+            }
+            
+            .video-section {
+                margin-top: 52px;
+            }
+            
+            .video-player {
+                height: calc(100vw * 9 / 16);
+                max-height: 70vh;
+            }
+            
+            .controls-overlay {
+                padding: 10px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            
+            .chat-header {
+                padding: 10px 12px;
+            }
+            
+            .chat-messages {
+                padding: 12px;
+                gap: 8px;
+            }
+            
+            .chat-input-container {
+                padding: 8px 12px;
+            }
+            
+            .chat-input {
+                padding: 10px 12px;
+                padding-right: 35px;
+                font-size: 13px;
+            }
+            
+            .send-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .video-player {
+                height: calc(100vw * 9 / 16);
+            }
+            
+            .control-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+            
+            .emoji-picker {
+                width: 200px;
+                gap: 6px;
+            }
+            
+            .emoji-item {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            
+            .user-modal-content {
+                padding: 20px;
+            }
+        }
+        
+        /* Hide controls after inactivity */
+        .controls-overlay {
+            transition: opacity 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- User Name Modal -->
+    <div class="user-modal" id="userModal">
+        <div class="user-modal-content">
+            <div class="logo" style="justify-content: center; margin-bottom: 20px; font-size: 24px;">
+                <i class="fas fa-tv"></i>
+                <span>KINAFLIX TV</span>
+            </div>
+            <h2>Enter Your Name</h2>
+            <input type="text" id="userNameInput" class="name-input" 
+                   placeholder="Enter display name" maxlength="20" autocomplete="off">
+            <button class="join-btn" id="joinBtn">
+                <i class="fas fa-sign-in-alt"></i> Join Stream
+            </button>
+            <p style="color: #999; font-size: 12px; margin-top: 15px;">
+                Your name will be displayed in chat
+            </p>
+        </div>
+    </div>
+    
+    <!-- Main Viewer Interface -->
+    <div class="viewer-container" id="mainInterface" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-tv"></i>
+                <span>KINAFLIX TV</span>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <i class="fas fa-circle"></i>
+                <span>Connecting...</span>
+            </div>
+        </div>
+        
+        <!-- Stream Info -->
+        <div class="stream-info">
+            <div class="stream-title" id="streamTitle">Waiting for stream...</div>
+            <div class="stream-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="viewerCount">0</span> watching
+            </div>
+        </div>
+        
+        <!-- Video Section -->
+        <div class="video-section">
+            <div class="video-wrapper">
+                <video id="videoPlayer" class="video-player" 
+                       playsinline webkit-playsinline disablePictureInPicture 
+                       preload="metadata" crossorigin="anonymous">
+                    Your browser does not support HTML5 video.
+                </video>
+                <div class="controls-overlay" id="controlsOverlay">
+                    <button class="control-btn" id="muteBtn" title="Mute/Unmute">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <button class="control-btn" id="subtitleBtn" title="Subtitles">
+                        <i class="fas fa-closed-captioning"></i>
+                    </button>
+                    <button class="control-btn" id="fullscreenBtn" title="Fullscreen">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="control-btn" id="shareBtn" title="Share">
+                        <i class="fas fa-share"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <i class="fas fa-comments"></i>
+                    Live Chat
+                </div>
+                <div class="viewer-count" id="chatViewerCount">0 online</div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will appear here -->
+                <div class="chat-message system">
+                    Welcome to KINAFLIX TV! Enter your name to start chatting.
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" id="chatInput" 
+                           placeholder="Type a message..." maxlength="200" disabled>
+                    <button class="emoji-btn" id="emojiBtn" title="Emoji">
+                        <i class="far fa-smile"></i>
+                    </button>
+                    <div class="emoji-picker" id="emojiPicker">
+                        <!-- Emojis will be added by JavaScript -->
+                    </div>
+                </div>
+                <button class="send-btn" id="sendBtn" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+    
+    <!-- Include Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        // Viewer JavaScript - Fixed and optimized for mobile
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const userModal = document.getElementById('userModal');
+            const mainInterface = document.getElementById('mainInterface');
+            const userNameInput = document.getElementById('userNameInput');
+            const joinBtn = document.getElementById('joinBtn');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const streamTitle = document.getElementById('streamTitle');
+            const viewerCount = document.getElementById('viewerCount');
+            const chatViewerCount = document.getElementById('chatViewerCount');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const statusDot = document.getElementById('statusDot');
+            
+            // Control Buttons
+            const muteBtn = document.getElementById('muteBtn');
+            const subtitleBtn = document.getElementById('subtitleBtn');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const controlsOverlay = document.getElementById('controlsOverlay');
+            
+            // Emoji Elements
+            const emojiBtn = document.getElementById('emojiBtn');
+            const emojiPicker = document.getElementById('emojiPicker');
+            
+            // Emoji list (10 behavior emojis + popular ones)
+            const emojis = [
+                '😂', '❤️', '🔥', '👍', '😍', '😊', '🎉', '🙏', '🤔', '😎',
+                '👏', '🙌', '💯', '😭', '🥰', '🤣', '😘', '🥳', '👀', '✨'
+            ];
+            
+            // State
+            let socket = null;
+            let userName = localStorage.getItem('kinaflix_userName') || '';
+            let roomState = null;
+            let isMuted = false;
+            let subtitlesEnabled = false;
+            let isConnected = false;
+            let lastSyncTime = 0;
+            let controlsTimeout = null;
+            let isTyping = false;
+            let currentViewers = 0;
+            
+            // Initialize
+            init();
+            
+            function init() {
+                // Check if user already has a name
+                if (userName) {
+                    userNameInput.value = userName;
+                    joinStream();
+                } else {
+                    userModal.style.display = 'flex';
+                    userNameInput.focus();
+                }
+                
+                // Setup event listeners
+                setupEventListeners();
+                setupEmojiPicker();
+                
+                // Auto-hide controls
+                setupControlsAutoHide();
+            }
+            
+            function setupEventListeners() {
+                // Join stream
+                joinBtn.addEventListener('click', joinStream);
+                userNameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') joinStream();
+                });
+                
+                // Chat
+                sendBtn.addEventListener('click', sendMessage);
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+                chatInput.addEventListener('input', () => {
+                    isTyping = chatInput.value.trim().length > 0;
+                    sendBtn.disabled = !isTyping;
+                });
+                
+                // Control buttons
+                muteBtn.addEventListener('click', toggleMute);
+                subtitleBtn.addEventListener('click', toggleSubtitles);
+                fullscreenBtn.addEventListener('click', toggleFullscreen);
+                shareBtn.addEventListener('click', shareStream);
+                
+                // Video player events
+                videoPlayer.addEventListener('click', togglePlayPause);
+                videoPlayer.addEventListener('play', () => {
+                    updateStreamStatus(true);
+                    hideControls();
+                });
+                videoPlayer.addEventListener('pause', () => {
+                    updateStreamStatus(false);
+                    showControls();
+                });
+                videoPlayer.addEventListener('timeupdate', handleTimeUpdate);
+                
+                // Touch events for mobile
+                videoPlayer.addEventListener('touchstart', () => {
+                    showControls();
+                    resetControlsTimeout();
+                });
+                
+                // Sync periodically
+                setInterval(syncWithServer, 5000); // Every 5 seconds
+                
+                // Visibility change
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && isConnected) {
+                        socket.emit('syncRequest');
+                    }
+                });
+                
+                // Handle back button
+                window.addEventListener('popstate', () => {
+                    showControls();
+                });
+            }
+            
+            function setupEmojiPicker() {
+                // Populate emoji picker
+                emojis.forEach(emoji => {
+                    const emojiBtn = document.createElement('button');
+                    emojiBtn.className = 'emoji-item';
+                    emojiBtn.textContent = emoji;
+                    emojiBtn.title = emoji;
+                    emojiBtn.addEventListener('click', () => {
+                        const currentText = chatInput.value;
+                        chatInput.value = currentText + emoji;
+                        chatInput.focus();
+                        emojiPicker.classList.remove('show');
+                        isTyping = true;
+                        sendBtn.disabled = false;
+                    });
+                    emojiPicker.appendChild(emojiBtn);
+                });
+                
+                // Toggle emoji picker
+                emojiBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    emojiPicker.classList.toggle('show');
+                });
+                
+                // Close emoji picker when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!emojiPicker.contains(e.target) && !emojiBtn.contains(e.target)) {
+                        emojiPicker.classList.remove('show');
+                    }
+                });
+            }
+            
+            function setupControlsAutoHide() {
+                // Show controls on touch/click
+                document.addEventListener('click', () => {
+                    showControls();
+                    resetControlsTimeout();
+                });
+                
+                document.addEventListener('touchstart', () => {
+                    showControls();
+                    resetControlsTimeout();
+                });
+            }
+            
+            function showControls() {
+                controlsOverlay.classList.remove('hidden');
+            }
+            
+            function hideControls() {
+                if (!videoPlayer.paused) {
+                    controlsOverlay.classList.add('hidden');
+                }
+            }
+            
+            function resetControlsTimeout() {
+                clearTimeout(controlsTimeout);
+                if (!videoPlayer.paused) {
+                    controlsTimeout = setTimeout(hideControls, 3000);
+                }
+            }
+            
+            function joinStream() {
+                userName = userNameInput.value.trim();
+                if (!userName) {
+                    showToast('Please enter your name', 'error');
+                    userNameInput.focus();
+                    return;
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('kinaflix_userName', userName);
+                
+                // Hide modal, show main interface
+                userModal.style.display = 'none';
+                mainInterface.style.display = 'flex';
+                
+                // Connect to server
+                connectSocket();
+            }
+            
+            function connectSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const socketUrl = `${protocol}//${window.location.host}`;
+                
+                socket = io(socketUrl, {
+                    transports: ['websocket', 'polling'],
+                    upgrade: true,
+                    timeout: 10000,
+                    reconnection: true,
+                    reconnectionAttempts: 3,
+                    reconnectionDelay: 1000
+                });
+                
+                socket.on('connect', () => {
+                    console.log('Connected to server');
+                    updateConnectionStatus(true);
+                    isConnected = true;
+                    
+                    // Identify as viewer
+                    socket.emit('identify', { 
+                        name: userName, 
+                        type: 'viewer' 
+                    });
+                    
+                    // Enable chat
+                    chatInput.disabled = false;
+                    chatInput.placeholder = `Message as ${userName}...`;
+                });
+                
+                socket.on('identified', (data) => {
+                    showToast(`Welcome ${userName}!`, 'success');
+                    addSystemMessage(`You joined as "${userName}"`);
+                    
+                    // Request sync
+                    socket.emit('syncRequest');
+                });
+                
+                socket.on('viewerLimitReached', (limit) => {
+                    showToast(`Stream is full (${limit} viewers max)`, 'error');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                });
+                
+                socket.on('syncResponse', (state) => {
+                    roomState = state;
+                    updateUI();
+                    syncVideo();
+                });
+                
+                socket.on('roomState', (state) => {
+                    roomState = state;
+                    updateUI();
+                });
+                
+                socket.on('playlistUpdate', (updatedPlaylist) => {
+                    // Update stream title if there's a current video
+                    if (roomState && roomState.currentVideo) {
+                        streamTitle.textContent = roomState.currentVideo.originalName;
+                    }
+                });
+                
+                socket.on('videoChange', (video) => {
+                    if (video) {
+                        loadVideo(video);
+                        showToast(`Now playing: ${video.originalName}`, 'info');
+                        addSystemMessage(`Now playing: ${video.originalName}`);
+                    }
+                });
+                
+                socket.on('playVideo', (data) => {
+                    if (data && data.currentTime !== undefined) {
+                        videoPlayer.currentTime = data.currentTime;
+                    }
+                    videoPlayer.play().catch(e => {
+                        console.log('Auto-play prevented:', e);
+                    });
+                    updateStreamStatus(true);
+                });
+                
+                socket.on('pauseVideo', () => {
+                    videoPlayer.pause();
+                    updateStreamStatus(false);
+                });
+                
+                socket.on('seekVideo', (time) => {
+                    if (Math.abs(videoPlayer.currentTime - time) > 2) {
+                        videoPlayer.currentTime = time;
+                    }
+                });
+                
+                socket.on('chatMessage', (message) => {
+                    addChatMessage(message);
+                });
+                
+                socket.on('userJoin', (data) => {
+                    currentViewers = data.viewerCount;
+                    updateViewerCount();
+                    if (data.name !== userName) {
+                        addSystemMessage(`${data.name} joined`);
+                    }
+                });
+                
+                socket.on('userLeave', (data) => {
+                    currentViewers = data.viewerCount;
+                    updateViewerCount();
+                    if (data.name !== userName) {
+                        addSystemMessage(`${data.name} left`);
+                    }
+                });
+                
+                socket.on('subtitlesToggle', (enabled) => {
+                    subtitlesEnabled = enabled;
+                    updateSubtitleButton();
+                    updateVideoSubtitles();
+                });
+                
+                socket.on('subtitleUpdate', (subtitleFile) => {
+                    if (roomState) roomState.subtitleFile = subtitleFile;
+                    updateVideoSubtitles();
+                });
+                
+                socket.on('kicked', (data) => {
+                    showToast(`You were removed: ${data.reason}`, 'error');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                });
+                
+                socket.on('disconnect', () => {
+                    updateConnectionStatus(false);
+                    isConnected = false;
+                    chatInput.disabled = true;
+                    chatInput.placeholder = 'Disconnected...';
+                    sendBtn.disabled = true;
+                    showToast('Disconnected from server', 'error');
+                });
+                
+                socket.on('connect_error', (error) => {
+                    console.error('Connection error:', error);
+                    showToast('Connection failed. Retrying...', 'error');
+                });
+            }
+            
+            function loadVideo(video) {
+                if (videoPlayer.src !== video.path) {
+                    videoPlayer.src = video.path;
+                    streamTitle.textContent = video.originalName;
+                    
+                    // Add metadata for better loading
+                    videoPlayer.load();
+                }
+                
+                updateVideoSubtitles();
+            }
+            
+            function updateVideoSubtitles() {
+                // Remove existing tracks
+                const tracks = videoPlayer.querySelectorAll('track');
+                tracks.forEach(track => track.remove());
+                
+                if (subtitlesEnabled && roomState && roomState.subtitleFile) {
+                    const newTrack = document.createElement('track');
+                    newTrack.kind = 'subtitles';
+                    newTrack.label = 'English';
+                    newTrack.srclang = 'en';
+                    newTrack.src = roomState.subtitleFile;
+                    newTrack.default = true;
+                    videoPlayer.appendChild(newTrack);
+                    
+                    // Enable subtitles in player
+                    videoPlayer.textTracks[0].mode = 'showing';
+                }
+            }
+            
+            function syncVideo() {
+                if (!roomState || !roomState.currentVideo) return;
+                
+                // Load video if different
+                if (!videoPlayer.src.includes(roomState.currentVideo.path)) {
+                    loadVideo(roomState.currentVideo);
+                }
+                
+                // Sync playback state
+                if (roomState.isPlaying && videoPlayer.paused) {
+                    videoPlayer.play().catch(e => {
+                        console.log('Auto-play prevented:', e);
+                    });
+                } else if (!roomState.isPlaying && !videoPlayer.paused) {
+                    videoPlayer.pause();
+                }
+                
+                // Sync time (if difference is significant)
+                const timeDiff = Math.abs(videoPlayer.currentTime - roomState.currentTime);
+                if (timeDiff > 5) { // More than 5 seconds difference
+                    videoPlayer.currentTime = roomState.currentTime;
+                }
+                
+                lastSyncTime = Date.now();
+            }
+            
+            function handleTimeUpdate() {
+                // Throttle sync requests
+                const now = Date.now();
+                if (now - lastSyncTime > 3000) { // Every 3 seconds
+                    lastSyncTime = now;
+                }
+            }
+            
+            function syncWithServer() {
+                if (socket && socket.connected) {
+                    socket.emit('syncRequest');
+                }
+            }
+            
+            function togglePlayPause() {
+                if (!isConnected) return;
+                showControls();
+                resetControlsTimeout();
+                
+                // Just update UI, server controls actual playback
+                if (videoPlayer.paused) {
+                    videoPlayer.play().catch(console.error);
+                } else {
+                    videoPlayer.pause();
+                }
+            }
+            
+            function addChatMessage(message) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `chat-message ${message.isAdmin ? 'admin' : 'viewer'}`;
+                
+                const messageText = escapeHtml(message.text);
+                const formattedText = messageText.replace(/\n/g, '<br>');
+                
+                messageEl.innerHTML = `
+                    <div class="message-sender">
+                        ${message.userName}
+                        ${message.isAdmin ? '<span class="admin-badge">Admin</span>' : ''}
+                    </div>
+                    <div class="message-text">${formattedText}</div>
+                    <div class="message-time">
+                        ${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </div>
+                `;
+                
+                chatMessages.appendChild(messageEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            function addSystemMessage(text) {
+                const messageEl = document.createElement('div');
+                messageEl.className = 'chat-message system';
+                messageEl.textContent = text;
+                
+                chatMessages.appendChild(messageEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message || !socket || !isTyping) return;
+                
+                socket.emit('chatMessage', { message });
+                chatInput.value = '';
+                isTyping = false;
+                sendBtn.disabled = true;
+                chatInput.focus();
+            }
+            
+            function toggleMute() {
+                isMuted = !isMuted;
+                videoPlayer.muted = isMuted;
+                
+                const icon = muteBtn.querySelector('i');
+                if (isMuted) {
+                    icon.className = 'fas fa-volume-mute';
+                    muteBtn.classList.add('muted');
+                    showToast('Muted', 'info');
+                } else {
+                    icon.className = 'fas fa-volume-up';
+                    muteBtn.classList.remove('muted');
+                    showToast('Unmuted', 'info');
+                }
+                
+                showControls();
+                resetControlsTimeout();
+            }
+            
+            function toggleSubtitles() {
+                subtitlesEnabled = !subtitlesEnabled;
+                updateSubtitleButton();
+                updateVideoSubtitles();
+                
+                if (subtitlesEnabled) {
+                    showToast('Subtitles enabled', 'info');
+                } else {
+                    showToast('Subtitles disabled', 'info');
+                }
+                
+                showControls();
+                resetControlsTimeout();
+            }
+            
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    const videoWrapper = document.querySelector('.video-wrapper');
+                    if (videoWrapper.requestFullscreen) {
+                        videoWrapper.requestFullscreen();
+                    } else if (videoWrapper.webkitRequestFullscreen) {
+                        videoWrapper.webkitRequestFullscreen();
+                    } else if (videoWrapper.mozRequestFullScreen) {
+                        videoWrapper.mozRequestFullScreen();
+                    } else if (videoWrapper.msRequestFullscreen) {
+                        videoWrapper.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+                
+                showControls();
+                resetControlsTimeout();
+            }
+            
+            function shareStream() {
+                const shareData = {
+                    title: 'KINAFLIX TV Stream',
+                    text: 'Watch this live stream on KINAFLIX TV',
+                    url: window.location.href,
+                };
+                
+                if (navigator.share && navigator.canShare(shareData)) {
+                    navigator.share(shareData)
+                        .then(() => showToast('Stream shared!', 'success'))
+                        .catch(err => {
+                            if (err.name !== 'AbortError') {
+                                copyToClipboard(window.location.href);
+                            }
+                        });
+                } else {
+                    copyToClipboard(window.location.href);
+                }
+                
+                showControls();
+                resetControlsTimeout();
+            }
+            
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast('Link copied to clipboard!', 'success'))
+                    .catch(() => {
+                        // Fallback for older browsers
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        showToast('Link copied!', 'success');
+                    });
+            }
+            
+            function updateUI() {
+                if (roomState) {
+                    // Sync video
+                    syncVideo();
+                    
+                    // Update subtitle state
+                    subtitlesEnabled = roomState.subtitleEnabled || false;
+                    updateSubtitleButton();
+                    
+                    // Load chat history
+                    if (roomState.chatHistory && roomState.chatHistory.length > 0) {
+                        roomState.chatHistory.forEach(msg => addChatMessage(msg));
+                    }
+                }
+            }
+            
+            function updateSubtitleButton() {
+                subtitleBtn.classList.toggle('subtitles-on', subtitlesEnabled);
+                const icon = subtitleBtn.querySelector('i');
+                if (subtitlesEnabled) {
+                    icon.style.color = '#4CAF50';
+                } else {
+                    icon.style.color = '';
+                }
+            }
+            
+            function updateConnectionStatus(connected) {
+                const icon = connectionStatus.querySelector('i');
+                const text = connectionStatus.querySelector('span');
+                
+                if (connected) {
+                    icon.style.color = '#4CAF50';
+                    text.textContent = 'Connected';
+                    connectionStatus.classList.add('connected');
+                    connectionStatus.classList.remove('disconnected');
+                } else {
+                    icon.style.color = '#f44336';
+                    text.textContent = 'Disconnected';
+                    connectionStatus.classList.add('disconnected');
+                    connectionStatus.classList.remove('connected');
+                }
+            }
+            
+            function updateStreamStatus(playing) {
+                if (playing) {
+                    statusDot.className = 'status-dot live';
+                    statusDot.title = 'Live';
+                } else {
+                    statusDot.className = 'status-dot';
+                    statusDot.title = 'Paused';
+                }
+            }
+            
+            function updateViewerCount() {
+                viewerCount.textContent = currentViewers;
+                chatViewerCount.textContent = `${currentViewers} online`;
+            }
+            
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                
+                document.getElementById('toastContainer').appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Handle fullscreen changes
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+            
+            function handleFullscreenChange() {
+                const icon = fullscreenBtn.querySelector('i');
+                if (document.fullscreenElement) {
+                    icon.className = 'fas fa-compress';
+                } else {
+                    icon.className = 'fas fa-expand';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
