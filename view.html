@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINAFLIX TV - Watch Stream</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Viewer-specific styles */
+        .viewer-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--darker);
+        }
+        
+        .viewer-main {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .viewer-sidebar {
+            width: var(--chat-width);
+            background: var(--dark);
+            padding: 15px;
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .viewer-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .viewer-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .video-info-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .video-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .video-meta {
+            display: flex;
+            gap: 15px;
+            color: var(--gray);
+            font-size: 12px;
+        }
+        
+        .user-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .user-modal-content {
+            background: var(--dark);
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .user-modal h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .share-link-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--dark-gray);
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .share-link {
+            flex: 1;
+            padding: 8px;
+            background: var(--dark);
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 1024px) {
+            .viewer-container {
+                flex-direction: column;
+            }
+            
+            .viewer-sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #333;
+                order: 2;
+            }
+            
+            .viewer-main {
+                order: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .viewer-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .viewer-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .video-player {
+                max-height: 40vh;
+            }
+            
+            .viewer-controls {
+                flex-wrap: wrap;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .viewer-main, .viewer-sidebar {
+                padding: 10px;
+            }
+            
+            .video-info-card {
+                padding: 10px;
+            }
+            
+            .video-title {
+                font-size: 16px;
+            }
+            
+            .share-link-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- User Name Modal -->
+    <div class="user-modal" id="userModal">
+        <div class="user-modal-content">
+            <div class="logo" style="justify-content: center; margin-bottom: 20px;">
+                <i class="fas fa-tv"></i>
+                <span>KINAFLIX TV</span>
+            </div>
+            <h2>Enter Your Name</h2>
+            <div class="form-group">
+                <input type="text" id="userNameInput" class="form-control" 
+                       placeholder="Enter your display name" maxlength="20">
+                <p style="font-size: 12px; color: var(--gray); margin-top: 5px;">
+                    This name will be displayed in chat
+                </p>
+            </div>
+            <button class="btn btn-primary" id="joinBtn" style="width: 100%;">
+                <i class="fas fa-sign-in-alt"></i> Join Stream
+            </button>
+            <div class="share-link-container" style="margin-top: 30px;">
+                <input type="text" class="share-link" id="streamLink" readonly 
+                       value="Loading...">
+                <button class="btn btn-small btn-primary" id="copyLinkBtn">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Viewer Interface -->
+    <div class="viewer-container" id="mainInterface" style="display: none;">
+        <!-- Main Content -->
+        <div class="viewer-main">
+            <!-- Header -->
+            <div class="viewer-header">
+                <div class="logo">
+                    <i class="fas fa-tv"></i>
+                    <span>KINAFLIX TV</span>
+                </div>
+                <div class="viewer-info">
+                    <div id="connectionStatus" class="btn btn-small" style="background: #333;">
+                        <i class="fas fa-circle" style="color: #ccc;"></i>
+                        <span>Connecting...</span>
+                    </div>
+                    <div class="viewer-controls">
+                        <button class="btn btn-small btn-secondary" id="muteBtn" title="Mute">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <button class="btn btn-small btn-secondary" id="subtitleBtn" title="Subtitles">
+                            <i class="fas fa-closed-captioning"></i>
+                        </button>
+                        <button class="btn btn-small btn-secondary" id="fullscreenBtn" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button class="btn btn-small btn-primary" id="shareBtn" title="Share">
+                            <i class="fas fa-share"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Video Info -->
+            <div class="video-info-card">
+                <div class="video-title" id="videoTitle">Waiting for stream to start...</div>
+                <div class="video-meta">
+                    <span id="viewerCount">
+                        <i class="fas fa-users"></i> <span id="viewerCountNum">0</span> watching
+                    </span>
+                    <span id="streamStatus">
+                        <i class="fas fa-circle" style="color: #ccc;"></i> Connecting...
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Video Player -->
+            <div class="video-container">
+                <video id="videoPlayer" class="video-player" 
+                       controls playsinline webkit-playsinline>
+                    Your browser does not support the video tag.
+                </video>
+                <div class="video-controls">
+                    <div style="color: white; font-size: 14px;">
+                        Playback controlled by host
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Playlist -->
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">
+                    <i class="fas fa-list"></i> Up Next
+                </h3>
+                <div class="playlist-container" id="playlist">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading playlist...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar (Chat) -->
+        <div class="viewer-sidebar">
+            <div class="card" style="flex: 1; min-height: 0;">
+                <h3 style="margin-bottom: 15px;">
+                    <i class="fas fa-comments"></i> Live Chat
+                </h3>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will appear here -->
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" 
+                               placeholder="Type a message...">
+                        <button class="btn btn-primary" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+    
+    <script>
+        // Viewer JavaScript
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const userModal = document.getElementById('userModal');
+            const mainInterface = document.getElementById('mainInterface');
+            const userNameInput = document.getElementById('userNameInput');
+            const joinBtn = document.getElementById('joinBtn');
+            const streamLink = document.getElementById('streamLink');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const playlistEl = document.getElementById('playlist');
+            const videoTitle = document.getElementById('videoTitle');
+            const viewerCountNum = document.getElementById('viewerCountNum');
+            const streamStatus = document.getElementById('streamStatus');
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            // Control Buttons
+            const muteBtn = document.getElementById('muteBtn');
+            const subtitleBtn = document.getElementById('subtitleBtn');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            
+            // State
+            let socket = null;
+            let userName = localStorage.getItem('kinaflix_userName') || '';
+            let roomState = null;
+            let playlist = [];
+            let isMuted = false;
+            let subtitlesEnabled = false;
+            let isConnected = false;
+            let lastSyncTime = 0;
+            
+            // Initialize
+            init();
+            
+            function init() {
+                // Set stream link
+                streamLink.value = window.location.href;
+                
+                // Check if user already has a name
+                if (userName) {
+                    userNameInput.value = userName;
+                    joinStream();
+                } else {
+                    userModal.style.display = 'flex';
+                    userNameInput.focus();
+                }
+                
+                // Setup event listeners
+                setupEventListeners();
+            }
+            
+            function setupEventListeners() {
+                // Join stream
+                joinBtn.addEventListener('click', joinStream);
+                userNameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') joinStream();
+                });
+                
+                // Copy link
+                copyLinkBtn.addEventListener('click', () => {
+                    streamLink.select();
+                    document.execCommand('copy');
+                    showToast('Link copied to clipboard!', 'success');
+                });
+                
+                // Chat
+                sendBtn.addEventListener('click', sendMessage);
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+                
+                // Control buttons
+                muteBtn.addEventListener('click', toggleMute);
+                subtitleBtn.addEventListener('click', toggleSubtitles);
+                fullscreenBtn.addEventListener('click', toggleFullscreen);
+                shareBtn.addEventListener('click', shareStream);
+                
+                // Video player events (for syncing)
+                videoPlayer.addEventListener('timeupdate', handleTimeUpdate);
+                videoPlayer.addEventListener('play', () => {
+                    if (!isConnected) return;
+                    // Only update UI, don't emit
+                    updateStreamStatus(true);
+                });
+                videoPlayer.addEventListener('pause', () => {
+                    if (!isConnected) return;
+                    updateStreamStatus(false);
+                });
+                
+                // Sync periodically
+                setInterval(syncWithServer, 10000); // Every 10 seconds
+                
+                // Visibility change (tab switch)
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && isConnected) {
+                        socket.emit('syncRequest');
+                    }
+                });
+            }
+            
+            function joinStream() {
+                userName = userNameInput.value.trim();
+                if (!userName) {
+                    showToast('Please enter your name', 'error');
+                    userNameInput.focus();
+                    return;
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('kinaflix_userName', userName);
+                
+                // Hide modal, show main interface
+                userModal.style.display = 'none';
+                mainInterface.style.display = 'flex';
+                
+                // Connect to server
+                connectSocket();
+            }
+            
+            function connectSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const socketUrl = `${protocol}//${window.location.host}`;
+                
+                socket = io(socketUrl);
+                
+                socket.on('connect', () => {
+                    console.log('Connected to server');
+                    updateConnectionStatus(true);
+                    isConnected = true;
+                    
+                    // Identify as viewer
+                    socket.emit('identify', { 
+                        name: userName, 
+                        type: 'viewer' 
+                    });
+                });
+                
+                socket.on('identified', (data) => {
+                    if (data.isAdmin) {
+                        showToast('You are connected as admin', 'warning');
+                    } else {
+                        showToast(`Welcome ${userName}!`, 'success');
+                    }
+                    
+                    // Request sync
+                    socket.emit('syncRequest');
+                });
+                
+                socket.on('viewerLimitReached', (limit) => {
+                    showToast(`Sorry! Stream is full (${limit} viewers max)`, 'error');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                });
+                
+                socket.on('syncResponse', (state) => {
+                    roomState = state;
+                    updateUI();
+                    syncVideo();
+                });
+                
+                socket.on('roomState', (state) => {
+                    roomState = state;
+                    updateUI();
+                });
+                
+                socket.on('playlistUpdate', (updatedPlaylist) => {
+                    playlist = updatedPlaylist;
+                    renderPlaylist();
+                });
+                
+                socket.on('videoChange', (video) => {
+                    if (video) {
+                        loadVideo(video);
+                        showToast(`Now playing: ${video.originalName}`, 'info');
+                    }
+                });
+                
+                socket.on('playVideo', () => {
+                    videoPlayer.play().catch(e => {
+                        console.log('Auto-play prevented:', e);
+                    });
+                    updateStreamStatus(true);
+                });
+                
+                socket.on('pauseVideo', () => {
+                    videoPlayer.pause();
+                    updateStreamStatus(false);
+                });
+                
+                socket.on('seekVideo', (time) => {
+                    if (Math.abs(videoPlayer.currentTime - time) > 2) {
+                        videoPlayer.currentTime = time;
+                    }
+                });
+                
+                socket.on('chatMessage', (message) => {
+                    addChatMessage(message);
+                });
+                
+                socket.on('userJoin', (data) => {
+                    updateViewerCount(data.viewerCount);
+                    addSystemMessage(`${data.name} joined`);
+                });
+                
+                socket.on('userLeave', (data) => {
+                    updateViewerCount(data.viewerCount);
+                    addSystemMessage(`${data.name} left`);
+                });
+                
+                socket.on('subtitlesToggle', (enabled) => {
+                    subtitlesEnabled = enabled;
+                    updateSubtitleButton();
+                    updateVideoSubtitles();
+                });
+                
+                socket.on('subtitleUpdate', (subtitleFile) => {
+                    roomState.subtitleFile = subtitleFile;
+                    updateVideoSubtitles();
+                });
+                
+                socket.on('kicked', (data) => {
+                    showToast(`You were removed: ${data.reason}`, 'error');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                });
+                
+                socket.on('disconnect', () => {
+                    updateConnectionStatus(false);
+                    isConnected = false;
+                    showToast('Disconnected from server', 'error');
+                });
+                
+                socket.on('connect_error', (error) => {
+                    console.error('Connection error:', error);
+                    showToast('Connection failed. Retrying...', 'error');
+                });
+            }
+            
+            function loadVideo(video) {
+                if (videoPlayer.src !== video.path) {
+                    videoPlayer.src = video.path;
+                    videoTitle.textContent = video.originalName;
+                }
+                
+                // Update subtitles if available
+                updateVideoSubtitles();
+                
+                // Mark active video in playlist
+                document.querySelectorAll('.playlist-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.videoId === video.id) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+            
+            function updateVideoSubtitles() {
+                const track = videoPlayer.querySelector('track');
+                if (track) track.remove();
+                
+                if (subtitlesEnabled && roomState && roomState.subtitleFile) {
+                    const newTrack = document.createElement('track');
+                    newTrack.kind = 'subtitles';
+                    newTrack.label = 'English';
+                    newTrack.srclang = 'en';
+                    newTrack.src = roomState.subtitleFile;
+                    newTrack.default = true;
+                    videoPlayer.appendChild(newTrack);
+                }
+            }
+            
+            function syncVideo() {
+                if (!roomState || !roomState.currentVideo) return;
+                
+                // Load video if different
+                if (!videoPlayer.src.includes(roomState.currentVideo.path)) {
+                    loadVideo(roomState.currentVideo);
+                }
+                
+                // Sync playback state
+                if (roomState.isPlaying && videoPlayer.paused) {
+                    videoPlayer.play().catch(e => console.log('Auto-play prevented:', e));
+                } else if (!roomState.isPlaying && !videoPlayer.paused) {
+                    videoPlayer.pause();
+                }
+                
+                // Sync time (if difference is significant)
+                const timeDiff = Math.abs(videoPlayer.currentTime - roomState.currentTime);
+                if (timeDiff > 3) { // More than 3 seconds difference
+                    videoPlayer.currentTime = roomState.currentTime;
+                }
+                
+                lastSyncTime = Date.now();
+            }
+            
+            function handleTimeUpdate() {
+                // Throttle sync requests
+                const now = Date.now();
+                if (now - lastSyncTime > 5000) { // Every 5 seconds
+                    lastSyncTime = now;
+                }
+            }
+            
+            function syncWithServer() {
+                if (socket && socket.connected) {
+                    socket.emit('syncRequest');
+                }
+            }
+            
+            function renderPlaylist() {
+                if (!playlist || playlist.length === 0) {
+                    playlistEl.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray);"><i class="fas fa-film" style="font-size: 32px; margin-bottom: 10px;"></i><p>No upcoming videos</p></div>';
+                    return;
+                }
+                
+                playlistEl.innerHTML = playlist.map(video => `
+                    <div class="playlist-item ${roomState && roomState.currentVideo && roomState.currentVideo.id === video.id ? 'active' : ''}" 
+                         data-video-id="${video.id}">
+                        <div class="playlist-info">
+                            <div class="playlist-thumbnail">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <div class="playlist-details">
+                                <div class="playlist-title">${video.originalName}</div>
+                                <div class="playlist-meta">${formatFileSize(video.size)}</div>
+                            </div>
+                        </div>
+                        <div class="playlist-actions">
+                            <span style="color: var(--gray); font-size: 12px;">
+                                ${roomState && roomState.currentVideo && roomState.currentVideo.id === video.id ? 'Now Playing' : 'Up Next'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            function addChatMessage(message) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `chat-message ${message.isAdmin ? 'admin' : 'viewer'}`;
+                messageEl.innerHTML = `
+                    <div class="sender">
+                        ${message.userName} ${message.isAdmin ? '<span style="color: var(--primary);">(Admin)</span>' : ''}
+                    </div>
+                    <div class="text">${escapeHtml(message.text)}</div>
+                    <div class="time">${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                `;
+                
+                chatMessages.appendChild(messageEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            function addSystemMessage(text) {
+                const messageEl = document.createElement('div');
+                messageEl.className = 'chat-message viewer';
+                messageEl.innerHTML = `
+                    <div class="text" style="text-align: center; color: var(--gray); font-style: italic;">
+                        ${escapeHtml(text)}
+                    </div>
+                `;
+                
+                chatMessages.appendChild(messageEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message || !socket) return;
+                
+                socket.emit('chatMessage', { message });
+                chatInput.value = '';
+            }
+            
+            function toggleMute() {
+                isMuted = !isMuted;
+                videoPlayer.muted = isMuted;
+                
+                const icon = muteBtn.querySelector('i');
+                icon.className = isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+                
+                showToast(isMuted ? 'Audio muted' : 'Audio unmuted', 'info');
+            }
+            
+            function toggleSubtitles() {
+                subtitlesEnabled = !subtitlesEnabled;
+                updateSubtitleButton();
+                updateVideoSubtitles();
+                
+                showToast(subtitlesEnabled ? 'Subtitles enabled' : 'Subtitles disabled', 'info');
+            }
+            
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    const container = document.querySelector('.video-container');
+                    if (container.requestFullscreen) {
+                        container.requestFullscreen();
+                    } else if (container.webkitRequestFullscreen) {
+                        container.webkitRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+            }
+            
+            function shareStream() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'KINAFLIX TV Stream',
+                        text: 'Watch this live stream on KINAFLIX TV',
+                        url: window.location.href,
+                    });
+                } else {
+                    streamLink.select();
+                    document.execCommand('copy');
+                    showToast('Link copied to clipboard!', 'success');
+                }
+            }
+            
+            function updateUI() {
+                if (roomState) {
+                    // Sync video
+                    syncVideo();
+                    
+                    // Update playlist
+                    renderPlaylist();
+                    
+                    // Load chat history
+                    chatMessages.innerHTML = '';
+                    addSystemMessage('Welcome to KINAFLIX TV chat!');
+                    (roomState.chatHistory || []).forEach(msg => addChatMessage(msg));
+                    
+                    // Update subtitle state
+                    subtitlesEnabled = roomState.subtitleEnabled || false;
+                    updateSubtitleButton();
+                }
+            }
+            
+            function updateSubtitleButton() {
+                const icon = subtitleBtn.querySelector('i');
+                subtitleBtn.classList.toggle('btn-success', subtitlesEnabled);
+                subtitleBtn.classList.toggle('btn-secondary', !subtitlesEnabled);
+                icon.style.color = subtitlesEnabled ? 'white' : '';
+            }
+            
+            function updateConnectionStatus(connected) {
+                const icon = connectionStatus.querySelector('i');
+                const text = connectionStatus.querySelector('span');
+                
+                if (connected) {
+                    icon.style.color = '#4CAF50';
+                    text.textContent = 'Connected';
+                    connectionStatus.style.background = '#1b5e20';
+                } else {
+                    icon.style.color = '#f44336';
+                    text.textContent = 'Disconnected';
+                    connectionStatus.style.background = '#b71c1c';
+                }
+            }
+            
+            function updateStreamStatus(playing) {
+                const statusIcon = streamStatus.querySelector('i');
+                const statusText = streamStatus.querySelector('span') || streamStatus;
+                
+                if (playing) {
+                    statusIcon.style.color = '#4CAF50';
+                    streamStatus.innerHTML = '<i class="fas fa-circle" style="color: #4CAF50;"></i> LIVE';
+                } else {
+                    statusIcon.style.color = '#ff9800';
+                    streamStatus.innerHTML = '<i class="fas fa-circle" style="color: #ff9800;"></i> Paused';
+                }
+            }
+            
+            function updateViewerCount(count) {
+                if (count !== undefined) {
+                    viewerCountNum.textContent = count;
+                }
+            }
+            
+            function showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                
+                document.getElementById('toastContainer').appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            function formatFileSize(bytes) {
+                if (!bytes) return 'N/A';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+            
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        });
+    </script>
+</body>
+</html>
