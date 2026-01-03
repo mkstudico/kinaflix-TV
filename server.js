@@ -15,8 +15,13 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: "*" },
-  transports: ['websocket', 'polling']
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 // Configuration
@@ -32,7 +37,7 @@ const SUBTITLES_DIR = path.join(__dirname, 'subtitles');
 })();
 
 // Store for real-time data
-let connectedUsers = new Map(); // socket.id -> {name, type, room}
+const connectedUsers = new Map(); // socket.id -> {name, type, room, joinTime}
 let roomState = {
   currentVideo: null,
   isPlaying: false,
@@ -40,7 +45,8 @@ let roomState = {
   playlist: [],
   chatHistory: [],
   subtitleEnabled: false,
-  subtitleFile: null
+  subtitleFile: null,
+  streamStartTime: null
 };
 
 // Storage setup for file uploads
@@ -53,7 +59,8 @@ const storage = multer.diskStorage({
     }
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    cb(null, Date.now() + '-' + safeName);
   }
 });
 
@@ -65,9 +72,20 @@ const upload = multer({
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 app.use('/videos', express.static(VIDEOS_DIR));
 app.use('/subtitles', express.static(SUBTITLES_DIR));
+
+// Favicon fix
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
 
 // Routes
 app.get('/', (req, res) => {
@@ -83,72 +101,99 @@ app.get('/api/state', (req, res) => {
   res.json(roomState);
 });
 
-// Get connected users
+// Get connected users with watch time
 app.get('/api/users', (req, res) => {
-  const users = Array.from(connectedUsers.values());
+  const users = Array.from(connectedUsers.values()).map(user => ({
+    ...user,
+    watchTime: user.joinTime ? Date.now() - user.joinTime : 0
+  }));
   res.json(users);
 });
 
 // Upload video
 app.post('/api/upload/video', upload.single('video'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  
-  const videoInfo = {
-    id: Date.now().toString(),
-    filename: req.file.filename,
-    originalName: req.file.originalname,
-    path: `/videos/${req.file.filename}`,
-    size: req.file.size,
-    uploadedAt: new Date().toISOString()
-  };
-  
-  roomState.playlist.push(videoInfo);
-  
-  // If this is the first video, set it as current
-  if (!roomState.currentVideo && roomState.playlist.length > 0) {
-    roomState.currentVideo = roomState.playlist[0];
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    
+    const videoInfo = {
+      id: Date.now().toString(),
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      path: `/videos/${req.file.filename}`,
+      size: req.file.size,
+      uploadedAt: new Date().toISOString(),
+      duration: 0 // Will be updated if we can get duration
+    };
+    
+    roomState.playlist.push(videoInfo);
+    
+    // If this is the first video, set it as current
+    if (!roomState.currentVideo && roomState.playlist.length > 0) {
+      roomState.currentVideo = roomState.playlist[0];
+      if (!roomState.streamStartTime) {
+        roomState.streamStartTime = new Date().toISOString();
+      }
+    }
+    
+    io.emit('playlistUpdate', roomState.playlist);
+    res.json(videoInfo);
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Upload failed' });
   }
-  
-  io.emit('playlistUpdate', roomState.playlist);
-  res.json(videoInfo);
 });
 
 // Upload subtitle
 app.post('/api/upload/subtitle', upload.single('subtitle'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No subtitle file' });
-  
-  roomState.subtitleFile = `/subtitles/${req.file.filename}`;
-  io.emit('subtitleUpdate', roomState.subtitleFile);
-  res.json({ subtitle: roomState.subtitleFile });
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No subtitle file' });
+    
+    roomState.subtitleFile = `/subtitles/${req.file.filename}`;
+    io.emit('subtitleUpdate', roomState.subtitleFile);
+    res.json({ subtitle: roomState.subtitleFile });
+  } catch (error) {
+    console.error('Subtitle upload error:', error);
+    res.status(500).json({ error: 'Upload failed' });
+  }
 });
 
 // Remove video from playlist
 app.delete('/api/video/:id', (req, res) => {
-  const videoId = req.params.id;
-  roomState.playlist = roomState.playlist.filter(v => v.id !== videoId);
-  
-  // If current video was removed, set new current
-  if (roomState.currentVideo && roomState.currentVideo.id === videoId) {
-    roomState.currentVideo = roomState.playlist.length > 0 ? roomState.playlist[0] : null;
-    roomState.currentTime = 0;
-    roomState.isPlaying = false;
-    io.emit('videoChange', roomState.currentVideo);
-    io.emit('playbackState', { 
-      isPlaying: roomState.isPlaying, 
-      currentTime: roomState.currentTime 
-    });
+  try {
+    const videoId = req.params.id;
+    roomState.playlist = roomState.playlist.filter(v => v.id !== videoId);
+    
+    // If current video was removed, set new current
+    if (roomState.currentVideo && roomState.currentVideo.id === videoId) {
+      roomState.currentVideo = roomState.playlist.length > 0 ? roomState.playlist[0] : null;
+      roomState.currentTime = 0;
+      roomState.isPlaying = false;
+      io.emit('videoChange', roomState.currentVideo);
+      io.emit('playbackState', { 
+        isPlaying: roomState.isPlaying, 
+        currentTime: roomState.currentTime 
+      });
+    }
+    
+    io.emit('playlistUpdate', roomState.playlist);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: 'Delete failed' });
   }
-  
-  io.emit('playlistUpdate', roomState.playlist);
-  res.json({ success: true });
 });
 
 // Reorder playlist
 app.post('/api/playlist/reorder', (req, res) => {
-  const newOrder = req.body.playlist;
-  roomState.playlist = newOrder;
-  io.emit('playlistUpdate', roomState.playlist);
-  res.json({ success: true });
+  try {
+    const newOrder = req.body.playlist;
+    roomState.playlist = newOrder;
+    io.emit('playlistUpdate', roomState.playlist);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Reorder error:', error);
+    res.status(500).json({ error: 'Reorder failed' });
+  }
 });
 
 // Socket.IO connection handling
@@ -165,9 +210,15 @@ io.on('connection', (socket) => {
     
     // Admin can always connect
     if (type === 'admin') {
-      connectedUsers.set(socket.id, { name: name || 'Admin', type: 'admin' });
+      connectedUsers.set(socket.id, { 
+        id: socket.id,
+        name: name || 'Admin', 
+        type: 'admin',
+        joinTime: Date.now()
+      });
       socket.emit('identified', { isAdmin: true });
       socket.emit('roomState', roomState);
+      io.emit('adminOnline', true);
       return;
     }
     
@@ -180,19 +231,27 @@ io.on('connection', (socket) => {
     
     // Viewer connection
     connectedUsers.set(socket.id, { 
+      id: socket.id,
       name: name || `Viewer_${socket.id.substring(0, 5)}`, 
-      type: 'viewer' 
+      type: 'viewer',
+      joinTime: Date.now()
     });
     
     socket.emit('identified', { isAdmin: false });
     socket.emit('roomState', roomState);
     
     // Notify everyone about new viewer
+    const viewerList = Array.from(connectedUsers.values())
+      .filter(user => user.type === 'viewer');
+    
     io.emit('userJoin', { 
       id: socket.id, 
       name: connectedUsers.get(socket.id).name,
-      viewerCount: viewerCount + 1
+      viewerCount: viewerList.length
     });
+    
+    // Send updated user list to admin
+    io.emit('userListUpdate', viewerList);
   });
   
   // Admin playback controls
@@ -200,7 +259,8 @@ io.on('connection', (socket) => {
     const user = connectedUsers.get(socket.id);
     if (user && user.type === 'admin') {
       roomState.isPlaying = true;
-      io.emit('playVideo');
+      roomState.currentTime = roomState.currentTime || 0;
+      io.emit('playVideo', { currentTime: roomState.currentTime });
     }
   });
   
@@ -231,7 +291,7 @@ io.on('connection', (socket) => {
       roomState.currentTime = 0;
       roomState.isPlaying = true;
       io.emit('videoChange', roomState.currentVideo);
-      io.emit('playVideo');
+      io.emit('playVideo', { currentTime: 0 });
     }
   });
   
@@ -246,7 +306,7 @@ io.on('connection', (socket) => {
       roomState.currentTime = 0;
       roomState.isPlaying = true;
       io.emit('videoChange', roomState.currentVideo);
-      io.emit('playVideo');
+      io.emit('playVideo', { currentTime: 0 });
     }
   });
   
@@ -257,7 +317,9 @@ io.on('connection', (socket) => {
       if (video) {
         roomState.currentVideo = video;
         roomState.currentTime = 0;
+        roomState.isPlaying = true;
         io.emit('videoChange', roomState.currentVideo);
+        io.emit('playVideo', { currentTime: 0 });
       }
     }
   });
@@ -273,12 +335,13 @@ io.on('connection', (socket) => {
   // Chat messages
   socket.on('chatMessage', (data) => {
     const user = connectedUsers.get(socket.id);
-    if (user) {
+    if (user && data.message && data.message.trim()) {
+      const messageText = data.message.trim();
       const message = {
         id: Date.now().toString(),
         userId: socket.id,
         userName: user.name,
-        text: data.message,
+        text: messageText,
         timestamp: new Date().toISOString(),
         isAdmin: user.type === 'admin'
       };
@@ -294,7 +357,7 @@ io.on('connection', (socket) => {
     }
   });
   
-  // Viewer actions (mute/fullscreen are client-side only)
+  // Sync request from viewer
   socket.on('syncRequest', () => {
     const user = connectedUsers.get(socket.id);
     if (user && user.type === 'viewer') {
@@ -320,6 +383,20 @@ io.on('connection', (socket) => {
     }
   });
   
+  // Request user list (admin)
+  socket.on('requestUserList', () => {
+    const user = connectedUsers.get(socket.id);
+    if (user && user.type === 'admin') {
+      const viewerList = Array.from(connectedUsers.values())
+        .filter(u => u.type === 'viewer')
+        .map(u => ({
+          ...u,
+          watchTime: u.joinTime ? Date.now() - u.joinTime : 0
+        }));
+      socket.emit('userListUpdate', viewerList);
+    }
+  });
+  
   // Disconnection
   socket.on('disconnect', () => {
     const user = connectedUsers.get(socket.id);
@@ -327,12 +404,22 @@ io.on('connection', (socket) => {
       connectedUsers.delete(socket.id);
       
       if (user.type === 'viewer') {
+        const viewerList = Array.from(connectedUsers.values())
+          .filter(u => u.type === 'viewer');
+        
         io.emit('userLeave', { 
           id: socket.id, 
           name: user.name,
-          viewerCount: Array.from(connectedUsers.values())
-            .filter(u => u.type === 'viewer').length
+          viewerCount: viewerList.length
         });
+        
+        // Update user list for admin
+        io.emit('userListUpdate', viewerList.map(u => ({
+          ...u,
+          watchTime: u.joinTime ? Date.now() - u.joinTime : 0
+        })));
+      } else if (user.type === 'admin') {
+        io.emit('adminOnline', false);
       }
       
       console.log('User disconnected:', socket.id, user.name);
@@ -340,8 +427,13 @@ io.on('connection', (socket) => {
   });
 });
 
+// Optimize for low latency
+io.engine.on("connection", (rawSocket) => {
+  rawSocket.setNoDelay(true);
+});
+
 // Start server
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║        KINAFLIX TV Streaming Server              ║
