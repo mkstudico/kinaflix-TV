@@ -3,331 +3,1400 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KINAFLIX TV - Admin Panel</title>
+    <title>KINAFLIX TV - Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#e50914">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"></script>
+    <style>
+        /* Admin-specific styles */
+        :root {
+            --sidebar-width: 250px;
+        }
+        
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--darker);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            background: var(--dark);
+            border-right: 1px solid var(--dark-gray);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .admin-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow-x: hidden;
+        }
+        
+        .admin-header {
+            padding: 15px 20px;
+            background: var(--dark);
+            border-bottom: 1px solid var(--dark-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .sidebar-tabs {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 5px;
+            flex: 1;
+        }
+        
+        .tab-btn {
+            padding: 12px 15px;
+            border: none;
+            background: transparent;
+            color: var(--gray);
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .video-player-wrapper {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .video-player {
+            width: 100%;
+            height: auto;
+            max-height: 60vh;
+            display: block;
+        }
+        
+        .admin-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 0 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--dark-gray);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .user-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .user-list-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background: var(--dark-gray);
+            color: var(--gray);
+            font-weight: 500;
+            border-bottom: 1px solid var(--dark-gray);
+            font-size: 14px;
+        }
+        
+        .user-list-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--dark-gray);
+            font-size: 14px;
+        }
+        
+        .user-list-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .playlist-item.dragging {
+            opacity: 0.5;
+            background: rgba(229, 9, 20, 0.1);
+        }
+        
+        .stream-status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .status-online {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+        
+        .status-offline {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+        }
+        
+        .status-paused {
+            background: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .connection-status.connected {
+            background: #1b5e20;
+        }
+        
+        .connection-status.disconnected {
+            background: #b71c1c;
+        }
+        
+        /* Form styles */
+        .form-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--dark-gray);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--dark-gray);
+            border-radius: 4px;
+            background: var(--darker);
+            color: var(--light);
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .admin-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--dark-gray);
+            }
+            
+            .sidebar-tabs {
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 10px;
+            }
+            
+            .tab-btn {
+                white-space: nowrap;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-list-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .admin-controls {
+                flex-wrap: wrap;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .tab-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .admin-controls {
+                bottom: 10px;
+                padding: 0 10px;
+                gap: 5px;
+            }
+        }
+        
+        /* Loading state */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--gray);
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(229, 9, 20, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            background: var(--card-bg);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary);
+            max-width: 300px;
+            font-size: 14px;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-left-color: #28a745;
+        }
+        
+        .toast.error {
+            border-left-color: #dc3545;
+        }
+        
+        .toast.warning {
+            border-left-color: #ffc107;
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container">
-        <!-- Header -->
-        <div class="admin-header">
-            <div class="logo">
-                <i class="fas fa-tv"></i>
-                <span>KINAFLIX TV - Admin Panel</span>
-            </div>
-            <div class="admin-nav">
-                <a href="index.html" class="btn btn-secondary btn-small">
-                    <i class="fas fa-home"></i> Home
-                </a>
-                <a href="view.html" class="btn btn-primary btn-small">
-                    <i class="fas fa-play"></i> View Stream
-                </a>
-            </div>
-        </div>
-
-        <!-- Stats Dashboard -->
-        <div class="stats-dashboard">
-            <h2><i class="fas fa-chart-line"></i> Live Dashboard</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <i class="fas fa-eye" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="viewerCount">0</div>
-                    <div class="stat-label">Active Viewers</div>
+        <!-- Sidebar with Tabs -->
+        <div class="admin-sidebar">
+            <div class="admin-header">
+                <div class="logo">
+                    <i class="fas fa-tv"></i>
+                    <span>KINAFLIX TV</span>
                 </div>
-                <div class="stat-card">
-                    <i class="fas fa-film" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="videoCount">0</div>
-                    <div class="stat-label">Videos in Playlist</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-clock" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="streamTime">24/7</div>
-                    <div class="stat-label">Stream Status</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-signal" style="font-size: 24px; color: var(--primary);"></i>
-                    <div class="stat-value" id="streamStatus">ONLINE</div>
-                    <div class="stat-label">Stream Status</div>
+                <div class="connection-status" id="connectionStatus">
+                    <i class="fas fa-circle"></i>
+                    <span>Connecting...</span>
                 </div>
             </div>
-        </div>
-
-        <!-- Video Management -->
-        <div class="admin-section">
-            <h2><i class="fas fa-video"></i> Video Management</h2>
             
-            <!-- Add Video Form -->
-            <div class="form-card">
-                <h3>Add New Video</h3>
-                <div class="form-group">
-                    <label for="videoName">Video Name *</label>
-                    <input type="text" id="videoName" placeholder="Enter video title" required>
-                </div>
-                <div class="form-group">
-                    <label for="videoUrl">Video URL *</label>
-                    <input type="url" id="videoUrl" 
-                           placeholder="https://your-cdn.com/video.mp4" 
-                           required>
-                    <small class="form-help">Supports: MP4, WebM, OGG, MOV, AVI, MKV from Bunny CDN or any direct URL</small>
-                </div>
-                <div class="form-group">
-                    <label for="videoOrder">Play Order</label>
-                    <select id="videoOrder">
-                        <option value="append">Add to End</option>
-                        <option value="prepend">Add to Beginning</option>
-                        <option value="now">Play Now</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" id="addVideoBtn">
-                    <i class="fas fa-plus"></i> Add Video
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="tab-btn" data-tab="participants">
+                    <i class="fas fa-users"></i>
+                    <span>Participants</span>
+                </button>
+                <button class="tab-btn" data-tab="stream">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Stream Status</span>
+                </button>
+                <button class="tab-btn" data-tab="playlist">
+                    <i class="fas fa-list"></i>
+                    <span>Playlist</span>
+                </button>
+                <button class="tab-btn" data-tab="upload">
+                    <i class="fas fa-upload"></i>
+                    <span>Upload</span>
+                </button>
+                <button class="tab-btn" data-tab="chat">
+                    <i class="fas fa-comments"></i>
+                    <span>Live Chat</span>
                 </button>
             </div>
-
-            <!-- Videos List -->
-            <div class="videos-list">
-                <h3>Playlist Videos</h3>
-                <div id="videosContainer" class="videos-container">
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i> Loading videos...
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="admin-main">
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="dashboard-tab">
+                <h2 style="margin-bottom: 20px; font-size: 20px; color: white;">Dashboard Overview</h2>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-eye" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="viewerCount">0</div>
+                        <div class="stat-label">Active Viewers</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-film" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="videoCount">0</div>
+                        <div class="stat-label">Videos in Playlist</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="streamTime">24/7</div>
+                        <div class="stat-label">Stream Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-signal" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="streamStatusText">ONLINE</div>
+                        <div class="stat-label">Stream Status</div>
+                    </div>
+                </div>
+                
+                <!-- Video Player -->
+                <div class="video-player-wrapper">
+                    <video id="videoPlayer" class="video-player" controlsList="nodownload" playsinline>
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="admin-controls">
+                        <button class="btn btn-primary" id="playBtn">
+                            <i class="fas fa-play"></i> Play
+                        </button>
+                        <button class="btn btn-secondary" id="pauseBtn">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button class="btn btn-secondary" id="prevBtn">
+                            <i class="fas fa-backward"></i> Prev
+                        </button>
+                        <button class="btn btn-secondary" id="nextBtn">
+                            <i class="fas fa-forward"></i> Next
+                        </button>
+                        <button class="btn btn-secondary" id="subtitleToggle">
+                            <i class="fas fa-closed-captioning"></i> Subs
+                        </button>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="number" id="seekTime" class="form-control" 
+                                   placeholder="Time" min="0" style="width: 80px; padding: 8px; font-size: 14px;">
+                            <button class="btn btn-small btn-primary" id="seekBtn">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Video Info -->
+                <div class="card">
+                    <h3 style="margin-bottom: 10px; font-size: 16px; color: white;">Now Playing</h3>
+                    <div id="currentVideoInfo">
+                        <p style="color: var(--gray); font-size: 14px;">No video selected</p>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- System Controls -->
-        <div class="admin-section">
-            <h2><i class="fas fa-cogs"></i> System Controls</h2>
-            <div class="controls-grid">
-                <button class="btn btn-secondary" id="refreshBtn">
-                    <i class="fas fa-sync"></i> Refresh Playlist
-                </button>
-                <button class="btn btn-secondary" id="clearChatBtn">
-                    <i class="fas fa-trash"></i> Clear Chat History
-                </button>
-                <button class="btn btn-danger" id="resetStreamBtn">
-                    <i class="fas fa-redo"></i> Restart Stream
-                </button>
+            
+            <!-- Participants Tab -->
+            <div class="tab-content" id="participants-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 20px; color: white;">Participants</h2>
+                    <button class="btn btn-small btn-primary" id="refreshUsersBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="user-list-table-container">
+                        <table class="user-list-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Watch Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userListBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--gray);">
+                                        <i class="fas fa-users" style="font-size: 32px; margin-bottom: 10px;"></i>
+                                        <p style="font-size: 14px;">No viewers connected</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- Real-time Logs -->
-        <div class="admin-section">
-            <h2><i class="fas fa-terminal"></i> System Logs</h2>
-            <div class="logs-container">
-                <div id="systemLogs">
-                    <div class="log-entry">
-                        <span class="log-time">[12:00:00]</span>
-                        <span class="log-message">System initialized</span>
+            
+            <!-- Stream Status Tab -->
+            <div class="tab-content" id="stream-tab">
+                <h2 style="margin-bottom: 20px; font-size: 20px; color: white;">Stream Status</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-server" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="serverUptime">0m</div>
+                        <div class="stat-label">Server Uptime</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-microchip" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="connectionLatency">0ms</div>
+                        <div class="stat-label">Avg Latency</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-database" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="totalVideos">0</div>
+                        <div class="stat-label">Total Videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-chart-line" style="font-size: 24px; color: var(--primary);"></i>
+                        <div class="stat-value" id="totalChats">0</div>
+                        <div class="stat-label">Chat Messages</div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: white;">Stream Information</h3>
+                    <div id="streamInfo" style="font-size: 14px;">
+                        <p style="margin-bottom: 10px;"><strong>Stream URL:</strong> <span id="streamUrl">Loading...</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Current Viewers:</strong> <span id="currentViewers">0</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Stream Started:</strong> <span id="streamStartTime">Not started</span></p>
+                        <p style="margin-bottom: 10px;"><strong>Current Video:</strong> <span id="currentVideoStatus">None</span></p>
+                        <p><strong>Subtitles:</strong> <span id="subtitleStatus">Disabled</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Playlist Tab -->
+            <div class="tab-content" id="playlist-tab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 20px; color: white;">Playlist Management</h2>
+                    <button class="btn btn-danger" id="clearPlaylistBtn">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div id="playlistContainer">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p style="font-size: 14px;">Loading playlist...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: white;">Playlist Controls</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" id="shufflePlaylistBtn">
+                            <i class="fas fa-random"></i> Shuffle
+                        </button>
+                        <button class="btn btn-secondary" id="sortByNameBtn">
+                            <i class="fas fa-sort-alpha-down"></i> Sort by Name
+                        </button>
+                        <button class="btn btn-secondary" id="sortByDateBtn">
+                            <i class="fas fa-sort-numeric-down"></i> Sort by Date
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Tab -->
+            <div class="tab-content" id="upload-tab">
+                <h2 style="margin-bottom: 20px; font-size: 20px; color: white;">Upload Content</h2>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: white;">
+                        <i class="fas fa-video"></i> Upload Videos
+                    </h3>
+                    <div id="uploadArea" style="border: 3px dashed #444; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: var(--gray); margin-bottom: 15px;"></i>
+                        <h4 style="font-size: 16px; margin-bottom: 10px;">Drop video files here or click to upload</h4>
+                        <p style="color: var(--gray); font-size: 14px;">
+                            Supports MP4, WebM, MOV files (Max 500MB each)
+                        </p>
+                    </div>
+                    <input type="file" id="videoUpload" accept="video/*" multiple style="display: none;">
+                    
+                    <div id="uploadProgress" style="margin-top: 20px; display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
+                            <span>Uploading...</span>
+                            <span id="uploadPercent">0%</span>
+                        </div>
+                        <div style="height: 6px; background: #333; border-radius: 3px; overflow: hidden;">
+                            <div id="uploadBar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.3s;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: white;">
+                        <i class="fas fa-closed-captioning"></i> Upload Subtitles
+                    </h3>
+                    <div style="display: flex; gap: 15px; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <input type="file" id="subtitleUpload" accept=".vtt" style="display: none;">
+                            <button class="btn btn-secondary" id="selectSubtitleBtn" style="width: 100%;">
+                                <i class="fas fa-file-alt"></i> Select .vtt File
+                            </button>
+                        </div>
+                        <div style="flex: 2;">
+                            <p style="color: var(--gray); font-size: 14px; margin: 0;">
+                                Upload WebVTT (.vtt) subtitle files. Subtitles will be available for all videos in the stream.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Firebase Video Management -->
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: white;">
+                        <i class="fas fa-link"></i> Add Video URL (Firebase)
+                    </h3>
+                    <div id="firebaseUploadForm">
+                        <div class="form-group">
+                            <label for="firebaseVideoName">Video Name *</label>
+                            <input type="text" id="firebaseVideoName" class="form-control" placeholder="Enter video title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="firebaseVideoUrl">Video URL *</label>
+                            <input type="url" id="firebaseVideoUrl" class="form-control" 
+                                   placeholder="https://your-cdn.com/video.mp4" required>
+                        </div>
+                        <button class="btn btn-primary" id="addFirebaseVideoBtn">
+                            <i class="fas fa-plus"></i> Add Video to Playlist
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Tab -->
+            <div class="tab-content" id="chat-tab">
+                <h2 style="margin-bottom: 20px; font-size: 20px; color: white;">Live Chat</h2>
+                
+                <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 500px;">
+                    <div class="chat-container" style="flex: 1; min-height: 0;">
+                        <div class="chat-messages" id="chatMessages" style="flex: 1; min-height: 0;">
+                            <!-- Messages will appear here -->
+                        </div>
+                        <div class="chat-input-container">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
+                            <button class="btn btn-primary" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Firebase Config -->
-    <script src="firebase-config.js"></script>
-    <!-- Main App -->
-    <script src="app.js"></script>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+    
+    <!-- Include Firebase and Socket.IO -->
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyYOUR_API_KEY_HERE",
+            authDomain: "kinaflix-tv.firebaseapp.com",
+            projectId: "kinaflix-tv",
+            storageBucket: "kinaflix-tv.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            const db = firebase.firestore();
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+        }
+    </script>
+    
+    <script>
+        // Admin JavaScript - Fixed and optimized
         class AdminPanel {
             constructor() {
+                this.socket = null;
+                this.db = firebase.firestore();
+                this.videos = [];
+                this.connectedUsers = [];
+                this.currentVideo = null;
+                this.isAdmin = true;
+                this.serverStartTime = Date.now();
                 this.viewerCount = 0;
-                this.streamStartTime = Date.now();
+                
                 this.init();
             }
             
-            init() {
+            async init() {
+                await this.loadVideos();
                 this.setupEventListeners();
-                this.loadVideos();
-                this.startStatsUpdate();
+                this.setupTabs();
+                this.connectSocket();
+                this.startStatsUpdates();
                 this.setupRealtimeListeners();
             }
             
-            setupEventListeners() {
-                // Add video
-                document.getElementById('addVideoBtn').addEventListener('click', () => this.addVideo());
+            async loadVideos() {
+                try {
+                    const snapshot = await this.db.collection('videos')
+                        .orderBy('createdAt', 'asc')
+                        .get();
+                    
+                    this.videos = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    
+                    this.updateVideoCount();
+                    this.renderPlaylist();
+                    
+                    // Set current video if available
+                    if (this.videos.length > 0) {
+                        this.currentVideo = this.videos[0];
+                        this.loadCurrentVideo();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading videos:', error);
+                    this.showToast('Failed to load videos', 'error');
+                }
+            }
+            
+            connectSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const socketUrl = `${protocol}//${window.location.host}`;
                 
-                // System controls
-                document.getElementById('refreshBtn').addEventListener('click', () => this.loadVideos());
-                document.getElementById('clearChatBtn').addEventListener('click', () => this.clearChat());
-                document.getElementById('resetStreamBtn').addEventListener('click', () => this.resetStream());
-                
-                // Enter key for form
-                document.getElementById('videoName').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.addVideo();
+                this.socket = io(socketUrl, {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true,
+                    reconnectionAttempts: 5,
+                    reconnectionDelay: 1000
                 });
-                document.getElementById('videoUrl').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.addVideo();
+                
+                this.socket.on('connect', () => {
+                    this.updateConnectionStatus(true);
+                    this.socket.emit('identify', { name: 'Admin', type: 'admin' });
+                });
+                
+                this.socket.on('identified', (data) => {
+                    this.isAdmin = data.isAdmin || false;
+                    this.showToast('Connected as Admin', 'success');
+                });
+                
+                this.socket.on('userJoin', (data) => {
+                    this.viewerCount++;
+                    this.updateViewerCount();
+                    this.showToast(`${data.name} joined`, 'success');
+                });
+                
+                this.socket.on('userLeave', (data) => {
+                    this.viewerCount = Math.max(0, this.viewerCount - 1);
+                    this.updateViewerCount();
+                });
+                
+                this.socket.on('chatMessage', (message) => {
+                    this.addChatMessage(message);
+                });
+                
+                this.socket.on('disconnect', () => {
+                    this.updateConnectionStatus(false);
                 });
             }
             
-            async addVideo() {
-                const name = document.getElementById('videoName').value.trim();
-                const url = document.getElementById('videoUrl').value.trim();
-                const order = document.getElementById('videoOrder').value;
+            setupEventListeners() {
+                // Tab switching
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const tabId = e.currentTarget.dataset.tab;
+                        this.switchTab(tabId);
+                    });
+                });
+                
+                // Video controls
+                document.getElementById('playBtn').addEventListener('click', () => this.playVideo());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.pauseVideo());
+                document.getElementById('nextBtn').addEventListener('click', () => this.nextVideo());
+                document.getElementById('prevBtn').addEventListener('click', () => this.previousVideo());
+                document.getElementById('seekBtn').addEventListener('click', () => this.seekVideo());
+                document.getElementById('subtitleToggle').addEventListener('click', () => this.toggleSubtitles());
+                
+                // User management
+                document.getElementById('refreshUsersBtn').addEventListener('click', () => this.refreshUsers());
+                
+                // Playlist controls
+                document.getElementById('clearPlaylistBtn').addEventListener('click', () => this.clearPlaylist());
+                document.getElementById('shufflePlaylistBtn').addEventListener('click', () => this.shufflePlaylist());
+                document.getElementById('sortByNameBtn').addEventListener('click', () => this.sortPlaylistByName());
+                document.getElementById('sortByDateBtn').addEventListener('click', () => this.sortPlaylistByDate());
+                
+                // Firebase video upload
+                document.getElementById('addFirebaseVideoBtn').addEventListener('click', () => this.addFirebaseVideo());
+                document.getElementById('firebaseVideoUrl').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addFirebaseVideo();
+                });
+                document.getElementById('firebaseVideoName').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addFirebaseVideo();
+                });
+                
+                // File upload
+                const uploadArea = document.getElementById('uploadArea');
+                const videoUpload = document.getElementById('videoUpload');
+                
+                uploadArea.addEventListener('click', () => videoUpload.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#e50914';
+                    uploadArea.style.background = 'rgba(229, 9, 20, 0.05)';
+                });
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.style.borderColor = '#444';
+                    uploadArea.style.background = 'transparent';
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#444';
+                    uploadArea.style.background = 'transparent';
+                    this.handleFileUpload(e.dataTransfer.files);
+                });
+                videoUpload.addEventListener('change', (e) => this.handleFileUpload(e.target.files));
+                
+                // Subtitle upload
+                document.getElementById('selectSubtitleBtn').addEventListener('click', () => {
+                    document.getElementById('subtitleUpload').click();
+                });
+                
+                // Chat
+                document.getElementById('sendBtn').addEventListener('click', () => this.sendChatMessage());
+                document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendChatMessage();
+                });
+            }
+            
+            setupTabs() {
+                // Show dashboard by default
+                this.switchTab('dashboard');
+            }
+            
+            switchTab(tabId) {
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.tab === tabId) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Show corresponding content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+                
+                // Load data for specific tabs
+                if (tabId === 'participants') {
+                    this.loadUsers();
+                } else if (tabId === 'playlist') {
+                    this.renderPlaylist();
+                }
+            }
+            
+            setupRealtimeListeners() {
+                // Listen for video updates from Firebase
+                this.db.collection('videos')
+                    .orderBy('createdAt', 'asc')
+                    .onSnapshot((snapshot) => {
+                        this.videos = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                        this.updateVideoCount();
+                        this.renderPlaylist();
+                    });
+            }
+            
+            async addFirebaseVideo() {
+                const name = document.getElementById('firebaseVideoName').value.trim();
+                const url = document.getElementById('firebaseVideoUrl').value.trim();
                 
                 if (!name || !url) {
-                    this.addLog('Please fill in all required fields', 'error');
+                    this.showToast('Please fill in all fields', 'error');
+                    return;
+                }
+                
+                if (!url.startsWith('http')) {
+                    this.showToast('Please enter a valid URL', 'error');
                     return;
                 }
                 
                 try {
-                    const success = await window.kinaflix.addVideo(name, url, order);
-                    if (success) {
-                        document.getElementById('videoName').value = '';
-                        document.getElementById('videoUrl').value = '';
-                        this.addLog(`Video added: ${name}`, 'success');
-                    }
+                    // Add to Firebase
+                    await this.db.collection('videos').add({
+                        name: name,
+                        url: url,
+                        createdAt: new Date(),
+                        size: 0,
+                        duration: 0
+                    });
+                    
+                    this.showToast(`Video "${name}" added to playlist`, 'success');
+                    
+                    // Clear form
+                    document.getElementById('firebaseVideoName').value = '';
+                    document.getElementById('firebaseVideoUrl').value = '';
+                    
                 } catch (error) {
-                    this.addLog(`Failed to add video: ${error.message}`, 'error');
+                    console.error('Error adding video:', error);
+                    this.showToast('Failed to add video: ' + error.message, 'error');
                 }
             }
             
-            async loadVideos() {
-                await window.kinaflix.loadVideos();
-                this.renderVideos();
+            async handleFileUpload(files) {
+                if (!files.length) return;
+                
+                const uploadProgress = document.getElementById('uploadProgress');
+                const uploadBar = document.getElementById('uploadBar');
+                const uploadPercent = document.getElementById('uploadPercent');
+                
+                uploadProgress.style.display = 'block';
+                
+                // Simulate upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    uploadBar.style.width = `${progress}%`;
+                    uploadPercent.textContent = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            this.showToast('Video upload simulation complete. Use Firebase URL upload for real videos.', 'info');
+                            uploadProgress.style.display = 'none';
+                            uploadBar.style.width = '0%';
+                        }, 500);
+                    }
+                }, 200);
             }
             
-            renderVideos() {
-                const container = document.getElementById('videosContainer');
-                const videos = window.kinaflix.videos;
+            loadCurrentVideo() {
+                if (!this.currentVideo) return;
                 
-                if (videos.length === 0) {
+                const videoPlayer = document.getElementById('videoPlayer');
+                const currentVideoInfo = document.getElementById('currentVideoInfo');
+                
+                videoPlayer.src = this.currentVideo.url;
+                currentVideoInfo.innerHTML = `
+                    <h4 style="margin-bottom: 5px; color: white; font-size: 16px;">${this.currentVideo.name}</h4>
+                    <p style="color: var(--gray); font-size: 14px;">
+                        URL: ${this.currentVideo.url.substring(0, 50)}...
+                    </p>
+                `;
+            }
+            
+            playVideo() {
+                const videoPlayer = document.getElementById('videoPlayer');
+                videoPlayer.play();
+                document.getElementById('streamStatusText').textContent = 'PLAYING';
+            }
+            
+            pauseVideo() {
+                const videoPlayer = document.getElementById('videoPlayer');
+                videoPlayer.pause();
+                document.getElementById('streamStatusText').textContent = 'PAUSED';
+            }
+            
+            nextVideo() {
+                if (this.videos.length === 0) return;
+                
+                const currentIndex = this.videos.findIndex(v => v.id === this.currentVideo?.id);
+                const nextIndex = (currentIndex + 1) % this.videos.length;
+                this.currentVideo = this.videos[nextIndex];
+                this.loadCurrentVideo();
+                this.playVideo();
+            }
+            
+            previousVideo() {
+                if (this.videos.length === 0) return;
+                
+                const currentIndex = this.videos.findIndex(v => v.id === this.currentVideo?.id);
+                const prevIndex = (currentIndex - 1 + this.videos.length) % this.videos.length;
+                this.currentVideo = this.videos[prevIndex];
+                this.loadCurrentVideo();
+                this.playVideo();
+            }
+            
+            seekVideo() {
+                const time = parseFloat(document.getElementById('seekTime').value);
+                if (!isNaN(time) && time >= 0) {
+                    const videoPlayer = document.getElementById('videoPlayer');
+                    videoPlayer.currentTime = time;
+                }
+            }
+            
+            toggleSubtitles() {
+                const btn = document.getElementById('subtitleToggle');
+                const enabled = btn.textContent.includes('OFF');
+                
+                if (enabled) {
+                    btn.innerHTML = '<i class="fas fa-closed-captioning"></i> ON';
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-success');
+                    this.showToast('Subtitles enabled', 'success');
+                } else {
+                    btn.innerHTML = '<i class="fas fa-closed-captioning"></i> OFF';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-secondary');
+                    this.showToast('Subtitles disabled', 'info');
+                }
+            }
+            
+            async clearPlaylist() {
+                if (!confirm('Clear entire playlist? This will remove all videos from Firebase.')) {
+                    return;
+                }
+                
+                try {
+                    // Delete all videos from Firebase
+                    const batch = this.db.batch();
+                    const snapshot = await this.db.collection('videos').get();
+                    
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    
+                    await batch.commit();
+                    
+                    this.videos = [];
+                    this.currentVideo = null;
+                    this.updateVideoCount();
+                    this.renderPlaylist();
+                    
+                    this.showToast('Playlist cleared', 'success');
+                    
+                } catch (error) {
+                    console.error('Error clearing playlist:', error);
+                    this.showToast('Failed to clear playlist', 'error');
+                }
+            }
+            
+            shufflePlaylist() {
+                // Shuffle videos array
+                for (let i = this.videos.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.videos[i], this.videos[j]] = [this.videos[j], this.videos[i]];
+                }
+                
+                // Update Firebase with new order (optional)
+                this.renderPlaylist();
+                this.showToast('Playlist shuffled', 'success');
+            }
+            
+            sortPlaylistByName() {
+                this.videos.sort((a, b) => a.name.localeCompare(b.name));
+                this.renderPlaylist();
+                this.showToast('Sorted by name', 'success');
+            }
+            
+            sortPlaylistByDate() {
+                this.videos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                this.renderPlaylist();
+                this.showToast('Sorted by date', 'success');
+            }
+            
+            renderPlaylist() {
+                const container = document.getElementById('playlistContainer');
+                
+                if (this.videos.length === 0) {
                     container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-film"></i>
-                            <p>No videos in playlist</p>
-                            <p class="empty-sub">Add your first video above</p>
+                        <div style="text-align: center; padding: 40px; color: var(--gray);">
+                            <i class="fas fa-film" style="font-size: 32px; margin-bottom: 15px;"></i>
+                            <p style="font-size: 14px;">No videos in playlist</p>
+                            <p style="font-size: 12px; margin-top: 10px;">Add videos using the Upload tab</p>
                         </div>
                     `;
                     return;
                 }
                 
-                container.innerHTML = videos.map((video, index) => `
-                    <div class="video-item" data-id="${video.id}">
-                        <div class="video-index">${index + 1}</div>
-                        <div class="video-info">
-                            <div class="video-title">${video.name}</div>
-                            <div class="video-url">${video.url}</div>
-                        </div>
-                        <div class="video-actions">
-                            <button class="btn btn-small" onclick="admin.playVideo('${video.id}')">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <button class="btn btn-small btn-danger" onclick="admin.deleteVideo('${video.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                container.innerHTML = this.videos.map((video, index) => `
+                    <div class="playlist-item ${this.currentVideo?.id === video.id ? 'active' : ''}" 
+                         data-video-id="${video.id}" style="margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; 
+                                   padding: 10px; background: var(--card-bg); border-radius: 6px; 
+                                   border: 1px solid var(--dark-gray);">
+                            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                                <div style="width: 30px; height: 30px; background: var(--primary); 
+                                            border-radius: 4px; display: flex; align-items: center; 
+                                            justify-content: center; color: white; font-weight: bold;">
+                                    ${index + 1}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 500; color: white; font-size: 14px;">${video.name}</div>
+                                    <div style="color: var(--gray); font-size: 12px; margin-top: 2px;">
+                                        ${video.url.substring(0, 40)}...
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-small btn-primary play-video-btn" 
+                                        data-video-id="${video.id}"
+                                        title="Play this video">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="btn btn-small btn-danger delete-video-btn" 
+                                        data-video-id="${video.id}"
+                                        title="Delete video">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
                 
-                // Update video count
-                document.getElementById('videoCount').textContent = videos.length;
-            }
-            
-            async deleteVideo(videoId) {
-                if (!confirm('Are you sure you want to delete this video?')) return;
-                
-                try {
-                    await window.kinaflix.deleteVideo(videoId);
-                    this.addLog('Video deleted successfully', 'success');
-                    this.loadVideos();
-                } catch (error) {
-                    this.addLog(`Failed to delete video: ${error.message}`, 'error');
-                }
-            }
-            
-            playVideo(videoId) {
-                const video = window.kinaflix.videos.find(v => v.id === videoId);
-                if (video) {
-                    // Set as current video
-                    window.kinaflix.setCurrentVideo(video);
-                    this.addLog(`Now playing: ${video.name}`, 'info');
-                }
-            }
-            
-            async clearChat() {
-                if (!confirm('Clear all chat messages?')) return;
-                
-                try {
-                    // In a real app, you'd clear Firestore collection
-                    this.addLog('Chat cleared', 'info');
-                } catch (error) {
-                    this.addLog('Failed to clear chat', 'error');
-                }
-            }
-            
-            resetStream() {
-                if (!confirm('Restart stream? This will reset playback to first video.')) return;
-                
-                window.kinaflix.currentIndex = 0;
-                if (window.player) {
-                    window.player.playCurrentVideo();
-                }
-                this.addLog('Stream restarted', 'info');
-            }
-            
-            startStatsUpdate() {
-                // Update stream time
-                setInterval(() => {
-                    const uptime = Math.floor((Date.now() - this.streamStartTime) / 1000 / 60);
-                    document.getElementById('streamTime').textContent = `${uptime}m`;
-                }, 60000);
-                
-                // Update viewer count (simulated)
-                setInterval(() => {
-                    // In real app, get from Firestore or WebSocket
-                    this.viewerCount = Math.floor(Math.random() * 100) + 50;
-                    document.getElementById('viewerCount').textContent = this.viewerCount;
-                }, 5000);
-            }
-            
-            setupRealtimeListeners() {
-                // Listen for video updates
-                window.kinaflix.db.collection('videos').onSnapshot(() => {
-                    this.loadVideos();
+                // Add event listeners
+                container.querySelectorAll('.play-video-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const videoId = btn.dataset.videoId;
+                        const video = this.videos.find(v => v.id === videoId);
+                        if (video) {
+                            this.currentVideo = video;
+                            this.loadCurrentVideo();
+                            this.playVideo();
+                            this.showToast(`Now playing: ${video.name}`, 'success');
+                        }
+                    });
                 });
                 
-                // Listen for system events
-                window.addEventListener('kinaflix:videoChanged', (e) => {
-                    this.addLog(`Video changed to: ${e.detail.name}`, 'info');
-                });
-                
-                window.addEventListener('kinaflix:error', (e) => {
-                    this.addLog(`Error: ${e.detail.message}`, 'error');
+                container.querySelectorAll('.delete-video-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const videoId = btn.dataset.videoId;
+                        if (confirm('Delete this video from playlist?')) {
+                            try {
+                                await this.db.collection('videos').doc(videoId).delete();
+                                this.showToast('Video deleted', 'success');
+                            } catch (error) {
+                                this.showToast('Failed to delete video', 'error');
+                            }
+                        }
+                    });
                 });
             }
             
-            addLog(message, type = 'info') {
-                const logs = document.getElementById('systemLogs');
-                const time = new Date().toLocaleTimeString();
-                const logEntry = document.createElement('div');
-                logEntry.className = `log-entry ${type}`;
-                logEntry.innerHTML = `
-                    <span class="log-time">[${time}]</span>
-                    <span class="log-message">${message}</span>
+            loadUsers() {
+                // Simulate user loading - in real app, fetch from server
+                this.connectedUsers = [
+                    { id: '1', name: 'Admin', type: 'admin', watchTime: 'Always' },
+                    { id: '2', name: 'Viewer1', type: 'viewer', watchTime: '30m' },
+                    { id: '3', name: 'Viewer2', type: 'viewer', watchTime: '1h' }
+                ];
+                
+                this.renderUserList();
+            }
+            
+            renderUserList() {
+                const userListBody = document.getElementById('userListBody');
+                
+                if (this.connectedUsers.length === 0) {
+                    userListBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 40px; color: var(--gray);">
+                                <i class="fas fa-users" style="font-size: 32px; margin-bottom: 10px;"></i>
+                                <p style="font-size: 14px;">No users connected</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                userListBody.innerHTML = this.connectedUsers.map(user => `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; background: var(--primary); 
+                                            border-radius: 50%; display: flex; align-items: center; 
+                                            justify-content: center; color: white; font-weight: bold;">
+                                    ${user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500; color: white; font-size: 14px;">${user.name}</div>
+                                    <div style="color: var(--gray); font-size: 12px; margin-top: 2px;">${user.type}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${user.watchTime}</td>
+                        <td>
+                            <span class="stream-status-indicator status-online">
+                                <i class="fas fa-circle"></i> Online
+                            </span>
+                        </td>
+                        <td>
+                            ${user.type === 'viewer' ? `
+                                <button class="btn btn-small btn-danger kick-user-btn" 
+                                        data-user-id="${user.id}" 
+                                        title="Kick user">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Add kick button listeners
+                userListBody.querySelectorAll('.kick-user-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const userId = btn.dataset.userId;
+                        if (confirm('Kick this viewer?')) {
+                            // In real app, emit socket event
+                            this.showToast('User kicked', 'success');
+                        }
+                    });
+                });
+            }
+            
+            refreshUsers() {
+                this.loadUsers();
+                this.showToast('User list refreshed', 'success');
+            }
+            
+            addChatMessage(message) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageEl = document.createElement('div');
+                messageEl.className = `chat-message ${message.isAdmin ? 'admin' : 'viewer'}`;
+                messageEl.innerHTML = `
+                    <div class="sender" style="font-size: 12px; color: ${message.isAdmin ? 'var(--primary)' : 'var(--primary-light)'};">
+                        ${message.userName} ${message.isAdmin ? '(Admin)' : ''}
+                    </div>
+                    <div class="text" style="font-size: 14px; margin: 5px 0;">${this.escapeHtml(message.text)}</div>
+                    <div class="time" style="font-size: 11px; color: var(--gray); text-align: right;">
+                        ${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </div>
                 `;
                 
-                logs.appendChild(logEntry);
-                logs.scrollTop = logs.scrollHeight;
+                chatMessages.appendChild(messageEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            sendChatMessage() {
+                const chatInput = document.getElementById('chatInput');
+                const message = chatInput.value.trim();
                 
-                // Keep only last 50 logs
-                const allLogs = logs.querySelectorAll('.log-entry');
-                if (allLogs.length > 50) {
-                    allLogs[0].remove();
+                if (!message) return;
+                
+                // Send to server (simulated)
+                const chatMessage = {
+                    userName: 'Admin',
+                    text: message,
+                    timestamp: Date.now(),
+                    isAdmin: true
+                };
+                
+                this.addChatMessage(chatMessage);
+                
+                // Clear input
+                chatInput.value = '';
+                chatInput.focus();
+                
+                // Show notification
+                this.showToast('Message sent', 'success');
+            }
+            
+            updateVideoCount() {
+                document.getElementById('videoCount').textContent = this.videos.length;
+                document.getElementById('totalVideos').textContent = this.videos.length;
+            }
+            
+            updateViewerCount() {
+                document.getElementById('viewerCount').textContent = this.viewerCount;
+                document.getElementById('currentViewers').textContent = this.viewerCount;
+            }
+            
+            updateConnectionStatus(connected) {
+                const connectionStatus = document.getElementById('connectionStatus');
+                const icon = connectionStatus.querySelector('i');
+                const text = connectionStatus.querySelector('span');
+                
+                if (connected) {
+                    icon.style.color = '#4CAF50';
+                    text.textContent = 'Connected';
+                    connectionStatus.classList.add('connected');
+                    connectionStatus.classList.remove('disconnected');
+                } else {
+                    icon.style.color = '#f44336';
+                    text.textContent = 'Disconnected';
+                    connectionStatus.classList.add('disconnected');
+                    connectionStatus.classList.remove('connected');
                 }
+            }
+            
+            startStatsUpdates() {
+                // Update stream time
+                setInterval(() => {
+                    const uptime = Date.now() - this.serverStartTime;
+                    const minutes = Math.floor(uptime / 60000);
+                    document.getElementById('serverUptime').textContent = `${minutes}m`;
+                    document.getElementById('streamTime').textContent = `${minutes}m`;
+                }, 60000);
+                
+                // Simulate latency updates
+                setInterval(() => {
+                    const latency = Math.floor(Math.random() * 100) + 50;
+                    document.getElementById('connectionLatency').textContent = `${latency}ms`;
+                }, 5000);
+                
+                // Update chat count
+                setInterval(() => {
+                    const chatCount = document.querySelectorAll('#chatMessages .chat-message').length;
+                    document.getElementById('totalChats').textContent = chatCount;
+                }, 10000);
+            }
+            
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                
+                document.getElementById('toastContainer').appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
         }
         
         // Initialize admin panel
         document.addEventListener('DOMContentLoaded', () => {
-            window.admin = new AdminPanel();
+            window.adminPanel = new AdminPanel();
         });
     </script>
 </body>
