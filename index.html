@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINAFLIX TV - Free 24/7 Streaming</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e50914">
+    <meta name="description" content="Free 24/7 streaming platform. Watch unlimited videos anytime, anywhere.">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-tv"></i>
+                <span>KINAFLIX TV</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="view.html" class="btn btn-primary btn-small">Watch Live</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Free 24/7 Streaming</h1>
+            <p class="hero-subtitle">Watch unlimited videos anytime, anywhere. No subscriptions, no fees, no hidden costs.</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <i class="fas fa-users"></i>
+                    <span id="liveViewers">1000+</span>
+                    <small>Live Viewers</small>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-film"></i>
+                    <span id="totalVideos">50+</span>
+                    <small>Videos</small>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-clock"></i>
+                    <span>24/7</span>
+                    <small>Always On</small>
+                </div>
+            </div>
+            <a href="view.html" class="btn btn-primary btn-large">
+                <i class="fas fa-play"></i> WATCH NOW - IT'S FREE
+            </a>
+            <p class="hero-note">
+                <i class="fas fa-check-circle"></i> No registration required • No credit card • No ads
+            </p>
+        </div>
+        <div class="hero-video-preview">
+            <div class="video-placeholder">
+                <i class="fas fa-play-circle"></i>
+                <div class="live-badge">LIVE</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Why Choose KINAFLIX TV?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h3>Completely Free</h3>
+                    <p>No subscriptions, no paywalls, no hidden fees. Enjoy unlimited streaming forever.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-globe"></i>
+                    <h3>Worldwide Access</h3>
+                    <p>Watch from anywhere in the world. No geo-restrictions or regional blocks.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-infinity"></i>
+                    <h3>24/7 Streaming</h3>
+                    <p>Never-ending content. Our stream never stops, day or night.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Low Latency</h3>
+                    <p>Super fast streaming with minimal buffering. Watch in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>Mobile Friendly</h3>
+                    <p>Works perfectly on phones, tablets, and desktops. Install as PWA.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-comments"></i>
+                    <h3>Live Chat</h3>
+                    <p>Chat with other viewers in real-time. Share the experience together.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Click Watch Now</h3>
+                    <p>No sign-up needed. Just click the button and start watching immediately.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Choose Your Name</h3>
+                    <p>Enter any name to join the chat. No personal information required.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Enjoy Unlimited Content</h3>
+                    <p>Watch curated videos 24/7. The stream automatically continues forever.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Start Watching Now</h2>
+            <p>Join thousands of viewers enjoying free, unlimited streaming.</p>
+            <a href="view.html" class="btn btn-primary btn-xlarge">
+                <i class="fas fa-play"></i> START WATCHING FREE
+            </a>
+            <p class="cta-note">
+                <i class="fas fa-shield-alt"></i> 100% Secure • <i class="fas fa-lock"></i> No Data Collection
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-tv"></i>
+                    <span>KINAFLIX TV</span>
+                </div>
+                <p class="footer-tagline">Free streaming for everyone, forever.</p>
+                <div class="footer-links">
+                    <a href="admin.html">Admin Panel</a>
+                    <a href="#privacy">Privacy</a>
+                    <a href="#terms">Terms</a>
+                    <a href="mailto:contact@kinaflix.tv">Contact</a>
+                </div>
+                <p class="footer-copyright">
+                    © 2024 KINAFLIX TV. All rights reserved. This is a free service.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    
+    <script>
+        // Update live stats
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize Firebase if needed
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                const db = firebase.firestore();
+                
+                // Get video count
+                const videosSnapshot = await db.collection('videos').get();
+                document.getElementById('totalVideos').textContent = videosSnapshot.size + '+';
+                
+            } catch (error) {
+                console.log('Using default stats');
+            }
+            
+            // Add PWA install prompt
+            let deferredPrompt;
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install button after 5 seconds
+                setTimeout(() => {
+                    const installBtn = document.createElement('button');
+                    installBtn.className = 'btn btn-secondary btn-small install-btn';
+                    installBtn.innerHTML = '<i class="fas fa-download"></i> Install App';
+                    installBtn.style.marginLeft = '10px';
+                    installBtn.onclick = () => {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then(() => {
+                            deferredPrompt = null;
+                        });
+                    };
+                    
+                    const navLinks = document.querySelector('.nav-links');
+                    if (navLinks) {
+                        navLinks.appendChild(installBtn);
+                    }
+                }, 5000);
+            });
+        });
+    </script>
+    
+    <!-- Register service worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch(err => console.log('Service Worker Registration Failed:', err));
+        }
+    </script>
+</body>
+</html>
