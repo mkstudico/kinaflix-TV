@@ -1,0 +1,39 @@
+{
+  "name": "KINAFLIX TV",
+  "short_name": "KINAFLIX",
+  "description": "Free 24/7 streaming platform",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#e50914",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["entertainment", "video", "streaming"],
+  "shortcuts": [
+    {
+      "name": "Watch Now",
+      "short_name": "Watch",
+      "description": "Start watching free content",
+      "url": "/view.html"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
